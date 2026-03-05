@@ -15,7 +15,7 @@ import { PathSegment } from '../../types'
 import { mapToVoid } from '../../utils/rx'
 import { RootViewModel } from '../GameRootView/viewModel'
 
-type Layout = { y: number }
+type Layout = { x: number; y: number }
 type BeginGesture = { absoluteX: number; absoluteY: number }
 type ChangeGesture = { changeX: number }
 
@@ -124,8 +124,10 @@ export class ViewModel {
   }
   onBegin = (gesture: BeginGesture): void => {
     if (this.rootViewModel.getBusy()) return
-    const yOffset = gesture.absoluteY - (this.containerLayout?.y || 0)
-    const xOffset = gesture.absoluteX - PADDING
+    const layout = this.containerLayout
+    if (!layout) return
+    const yOffset = gesture.absoluteY - layout.y
+    const xOffset = gesture.absoluteX - layout.x
 
     const rowIndex = Math.floor(yOffset / CELL_SIZE)
     const colIndex = Math.floor(xOffset / CELL_SIZE)

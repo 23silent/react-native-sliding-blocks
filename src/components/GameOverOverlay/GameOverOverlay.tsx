@@ -1,20 +1,10 @@
-import {
-  Group,
-  RoundedRect,
-  Skia,
-  Text,
-  matchFont
-} from '@shopify/react-native-skia'
+import { Group, RoundedRect, Skia, Text } from '@shopify/react-native-skia'
 import React, { useEffect } from 'react'
-import { Platform } from 'react-native'
-import {
-  useDerivedValue,
-  useSharedValue,
-  withTiming
-} from 'react-native-reanimated'
+import { useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated'
 
 import { CELL_SIZE, COLUMNS_COUNT, ROWS_COUNT } from '../../consts'
 import { BinderHook, DisposeBag } from '../../utils/rx'
+import { fonts } from '../../utils/fonts'
 import { RootViewModel } from '../GameRootView/viewModel'
 
 const WIDTH = CELL_SIZE * COLUMNS_COUNT
@@ -40,21 +30,9 @@ type Props = {
   rootViewModel: RootViewModel
 }
 
-const fontFamily = Platform.select({
-  ios: 'Helvetica',
-  default: 'sans-serif'
-})
-const scoreFont = matchFont({ fontFamily, fontSize: 20 })
-const titleFont = matchFont({
-  fontFamily,
-  fontSize: 28,
-  fontWeight: '700'
-})
-const restartFont = matchFont({
-  fontFamily,
-  fontSize: 18,
-  fontWeight: '600'
-})
+const scoreFont = fonts.scoreLarge
+const titleFont = fonts.title
+const restartFont = fonts.button
 
 export const GameOverOverlay = ({ rootViewModel }: Props): React.JSX.Element => {
   const overlayOpacity = useSharedValue(0)

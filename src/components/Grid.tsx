@@ -11,6 +11,7 @@ export const Grid = () => {
         y={rowIndex * CELL_SIZE}
         width={CELL_SIZE}
         height={CELL_SIZE}
+        color="rgba(0,0,0,1)"
         opacity={
           rowIndex % 2
             ? colIndex % 2

@@ -45,6 +45,7 @@ export const Indicator = (props: Props): React.JSX.Element | null => {
       y={0}
       width={activeItemWidth}
       height={CELL_SIZE * ROWS_COUNT}
+      color="blue"
       opacity={opacity}
     />
   )

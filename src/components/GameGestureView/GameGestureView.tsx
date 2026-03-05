@@ -1,33 +1,37 @@
-import { Canvas } from '@shopify/react-native-skia'
 import React, { PropsWithChildren, useEffect, useState } from 'react'
-import { LayoutChangeEvent, StyleProp, View, ViewStyle } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
-import {
-  Easing,
-  SharedValue,
-  withTiming
-} from 'react-native-reanimated'
+import { Easing, SharedValue, withTiming } from 'react-native-reanimated'
+import { scheduleOnRN } from 'react-native-worklets'
 
 import { CELL_SIZE } from '../../consts'
 import { PathSegment } from '../../types'
 import { nop } from '../../utils/nop'
 import { BinderHook, DisposeBag } from '../../utils/rx'
-import { GameOverOverlay, hitTestRestart } from '../GameOverOverlay'
 import { RootViewModel } from '../GameRootView/viewModel'
 import { ViewModel } from './viewModel'
-import { scheduleOnRN } from 'react-native-worklets'
+
+export type GameLayout = {
+  contentTop: number
+  gameAreaX: number
+  gameAreaY: number
+  actionsBarLeft: number
+  actionsBarWidth: number
+}
 
 type GameGestureViewProps = PropsWithChildren<{
   translateX: SharedValue<number>
-  style?: StyleProp<ViewStyle>
+  layout: GameLayout
   rootViewModel: RootViewModel
+  onTapOrRestart: (x: number, y: number) => boolean
 }>
 
 export const GameGestureView = ({
   children,
   translateX,
-  style,
-  rootViewModel
+  layout,
+  rootViewModel,
+  onTapOrRestart
 }: GameGestureViewProps) => {
   const [viewModel] = useState(() => new ViewModel(rootViewModel))
 
@@ -42,13 +46,14 @@ export const GameGestureView = ({
   }
 
   const handleTapOrRestart = (x: number, y: number) => {
-    const gameOver = rootViewModel.getGameOver()
-    if (gameOver && hitTestRestart(x, y)) {
-      rootViewModel.restart()
-      return
+    if (!onTapOrRestart(x, y)) {
+      onEnd()
     }
-    onEnd()
   }
+
+  useEffect(() => {
+    viewModel.setContainerLayout({ x: layout.gameAreaX, y: layout.gameAreaY })
+  }, [layout.gameAreaX, layout.gameAreaY])
 
   useEffect(() => {
     const disposeBag = new DisposeBag()
@@ -70,28 +75,18 @@ export const GameGestureView = ({
   }, [])
 
   const tap = Gesture.Tap().onEnd(e =>
-    scheduleOnRN(handleTapOrRestart, e.x, e.y)
+    scheduleOnRN(handleTapOrRestart, e.absoluteX, e.absoluteY)
   )
   const pan = Gesture.Pan()
-    .onBegin(e => scheduleOnRN(onBegin, e))
-    .onChange(e => scheduleOnRN(onChange, e))
+    .onBegin(e => scheduleOnRN(onBegin, { absoluteX: e.absoluteX, absoluteY: e.absoluteY }))
+    .onChange(e => scheduleOnRN(onChange, { changeX: e.changeX }))
     .onEnd(() => scheduleOnRN(onEnd))
 
   const gesture = Gesture.Race(pan, tap)
 
-  const onLayout = (e: LayoutChangeEvent) => {
-    const y = e.nativeEvent.layout.y
-    setTimeout(() => viewModel.setContainerLayout({ y }), 0)
-  }
-
   return (
-    <GestureDetector gesture={gesture}>
-      <View onLayout={onLayout} style={style}>
-        <Canvas style={{ flex: 1 }}>
-          {children}
-          <GameOverOverlay rootViewModel={rootViewModel} />
-        </Canvas>
-      </View>
-    </GestureDetector>
+    <View style={StyleSheet.absoluteFill}>
+      <GestureDetector gesture={gesture}>{children}</GestureDetector>
+    </View>
   )
 }
