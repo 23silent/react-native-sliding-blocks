@@ -1,13 +1,6 @@
-import {
-  Canvas,
-  Fill,
-  Group,
-  Image,
-  Rect,
-  RoundedRect,
-  Text,
-  useImage
-} from '@shopify/react-native-skia'
+import { Canvas, Fill, Group, Image, useImage } from '@shopify/react-native-skia'
+
+import { CheckerboardGrid, Panel, SkiaLabel } from '../../core/skia'
 import React, { memo } from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
@@ -74,7 +67,7 @@ export const GameCanvas = memo(function GameCanvas({
       )}
       <Fill color="rgba(255,255,255,0.3)" />
       <Group transform={[{ translateY: layout.contentTop }]}>
-        <RoundedRect
+        <Panel
           x={layout.actionsBarLeft}
           y={0}
           width={layout.actionsBarWidth}
@@ -82,39 +75,39 @@ export const GameCanvas = memo(function GameCanvas({
           r={10}
           color="rgba(0,0,0,0.4)"
         />
-        <Text
-          text="Restart"
-          font={fonts.button}
+        <SkiaLabel
           x={layout.actionsBarLeft + 20}
           y={38}
+          text="Restart"
+          font={fonts.button}
           color="white"
         />
-        <Text
-          text="Score"
-          font={fonts.label}
+        <SkiaLabel
           x={layout.actionsBarLeft + layout.actionsBarWidth / 2 - 80}
           y={18}
+          text="Score"
+          font={fonts.label}
           color="white"
         />
-        <Text
-          text={scoreText}
-          font={fonts.score}
+        <SkiaLabel
           x={layout.actionsBarLeft + layout.actionsBarWidth / 2 - 60}
           y={42}
+          text={scoreText}
+          font={fonts.score}
           color="white"
         />
-        <Text
-          text="Multiplier"
-          font={fonts.label}
+        <SkiaLabel
           x={layout.actionsBarLeft + layout.actionsBarWidth / 2 + 10}
           y={18}
+          text="Multiplier"
+          font={fonts.label}
           color="white"
         />
-        <Text
-          text={multiplierText}
-          font={fonts.score}
+        <SkiaLabel
           x={layout.actionsBarLeft + layout.actionsBarWidth / 2 + 30}
           y={42}
+          text={multiplierText}
+          font={fonts.score}
           color="white"
         />
       </Group>
@@ -124,7 +117,7 @@ export const GameCanvas = memo(function GameCanvas({
           { translateY: layout.gameAreaY }
         ]}
       >
-        <RoundedRect
+        <Panel
           x={0}
           y={0}
           width={GAME_WIDTH}
@@ -132,28 +125,11 @@ export const GameCanvas = memo(function GameCanvas({
           r={10}
           color="transparent"
         />
-        {/* Grid */}
-        {[...new Array(ROWS_COUNT)].map((_, rowIndex) =>
-          [...new Array(COLUMNS_COUNT)].map((_, colIndex) => (
-            <Rect
-              key={`${colIndex}-${rowIndex}`}
-              x={colIndex * CELL_SIZE}
-              y={rowIndex * CELL_SIZE}
-              width={CELL_SIZE}
-              height={CELL_SIZE}
-              color="rgba(0,0,0,1)"
-              opacity={
-                rowIndex % 2
-                  ? colIndex % 2
-                    ? 0.2
-                    : 0.3
-                  : !(colIndex % 2)
-                    ? 0.2
-                    : 0.3
-              }
-            />
-          ))
-        )}
+        <CheckerboardGrid
+          rows={ROWS_COUNT}
+          cols={COLUMNS_COUNT}
+          cellSize={CELL_SIZE}
+        />
         {/* Indicator */}
         <GameCanvasIndicator
           indicator={shared.indicator}

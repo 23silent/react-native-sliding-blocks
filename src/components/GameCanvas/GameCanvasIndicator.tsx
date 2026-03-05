@@ -1,7 +1,7 @@
-import { Rect } from '@shopify/react-native-skia'
 import React from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
+import { PositionedRect } from '../../core/skia'
 import { CELL_SIZE, ROWS_COUNT } from '../../model/consts'
 import type { SharedValuesMap } from '../../engine/useSharedValuesMap'
 
@@ -19,7 +19,7 @@ export function GameCanvasIndicator({
   )
 
   return (
-    <Rect
+    <PositionedRect
       x={x}
       y={0}
       width={indicator.width}

@@ -1,4 +1,4 @@
-import { Group, RoundedRect, Skia, Text } from '@shopify/react-native-skia'
+import { Panel, SkiaButton, SkiaLabel, SkiaOverlay } from '../../core/skia'
 import React from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
@@ -40,8 +40,8 @@ export function GameOverOverlay({
   )
 
   return (
-    <Group opacity={overlay.opacity}>
-      <RoundedRect
+    <SkiaOverlay opacity={overlay.opacity}>
+      <Panel
         x={0}
         y={0}
         width={gameWidth}
@@ -49,7 +49,7 @@ export function GameOverOverlay({
         r={0}
         color={backdropColor}
       />
-      <RoundedRect
+      <Panel
         x={boxLeft}
         y={boxTop}
         width={BOX_WIDTH}
@@ -57,35 +57,33 @@ export function GameOverOverlay({
         r={12}
         color={boxColor}
       />
-      <Text
-        text="Game Over"
-        font={fonts.title}
+      <SkiaLabel
         x={boxLeft + (BOX_WIDTH - 120) / 2}
         y={boxTop + 50}
-        color={Skia.Color('white')}
+        text="Game Over"
+        font={fonts.title}
+        color="white"
       />
-      <Text
-        text={scoreText}
-        font={fonts.scoreLarge}
+      <SkiaLabel
         x={boxLeft + (BOX_WIDTH - 80) / 2}
         y={boxTop + 80}
-        color={Skia.Color('white')}
+        text={scoreText}
+        font={fonts.scoreLarge}
+        color="white"
       />
-      <RoundedRect
+      <SkiaButton
         x={buttonLeft}
         y={buttonTop}
         width={BUTTON_WIDTH}
         height={BUTTON_HEIGHT}
         r={10}
         color={buttonColor}
-      />
-      <Text
-        text="Restart"
+        label="Restart"
+        labelX={buttonLeft + (BUTTON_WIDTH - 50) / 2}
+        labelY={buttonTop + BUTTON_HEIGHT / 2 + 8}
         font={fonts.button}
-        x={buttonLeft + (BUTTON_WIDTH - 50) / 2}
-        y={buttonTop + BUTTON_HEIGHT / 2 + 8}
-        color={Skia.Color('white')}
+        textColor="white"
       />
-    </Group>
+    </SkiaOverlay>
   )
 }

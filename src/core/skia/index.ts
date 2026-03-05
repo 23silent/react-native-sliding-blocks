@@ -1,3 +1,13 @@
+export {
+  BlockImage,
+  CheckerboardGrid,
+  Panel,
+  PositionedRect,
+  SkiaButton,
+  SkiaLabel,
+  SkiaOverlay
+} from './components'
+export type { BlockImageSlot } from './components'
 export { ReactiveSlot } from './ReactiveSlot'
 export type { ReactionRule } from './reactionRules'
 export type {
