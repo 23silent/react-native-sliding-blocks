@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from 'react'
+import React, { memo, useCallback, useMemo, useState } from 'react'
 import { useWindowDimensions } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -8,6 +8,8 @@ import {
   PADDING,
   ROWS_COUNT
 } from '../../model/consts'
+import { TOP_RESTART } from '../../model/layoutConsts'
+import type { PathSegment } from '../../model/types'
 import { GameEngine, useEngineBridge, useSharedValuesMap } from '../../engine'
 import { useBlocks } from '../../hooks/useBlocks'
 import { GameCanvas } from '../GameCanvas'
@@ -23,10 +25,10 @@ const getTopRestartBounds = (layout: {
   contentTop: number
   actionsBarLeft: number
 }) => ({
-  left: layout.actionsBarLeft + 10,
-  right: layout.actionsBarLeft + 110,
-  top: layout.contentTop + 15,
-  bottom: layout.contentTop + 55
+  left: layout.actionsBarLeft + TOP_RESTART.LEFT_OFFSET,
+  right: layout.actionsBarLeft + TOP_RESTART.LEFT_OFFSET + TOP_RESTART.WIDTH,
+  top: layout.contentTop + TOP_RESTART.TOP_OFFSET,
+  bottom: layout.contentTop + TOP_RESTART.TOP_OFFSET + TOP_RESTART.HEIGHT
 })
 
 const hitTestTopRestart = (
@@ -59,13 +61,13 @@ export const GameRootView = memo((): React.JSX.Element => {
       contentTop,
       gameAreaX,
       gameAreaY,
-      actionsBarLeft: (screenWidth - (screenWidth - PADDING * 2)) / 2,
+      actionsBarLeft: PADDING,
       actionsBarWidth: screenWidth - PADDING * 2
     }
   }, [screenWidth, screenHeight, insets])
 
   const onCompleteEnd = useCallback(
-    (updated?: import('../../model/types').PathSegment[][]) => {
+    (updated?: PathSegment[][]) => {
       engine.setActiveItem(undefined)
       engine.onAnimationFinish()
       if (updated) engine.onCompleteGesture(updated)

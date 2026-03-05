@@ -9,6 +9,7 @@ import {
   withLatestFrom
 } from 'rxjs'
 
+import { GESTURE_SENSITIVITY } from '../model/animConsts'
 import { CELL_SIZE, COLUMNS_COUNT } from '../model/consts'
 import type { PathSegment } from '../model/types'
 import { mapToVoid } from '../core/binding'
@@ -39,7 +40,11 @@ const clamp = (value: number, min: number, max: number): number =>
 export class GestureCoordinator {
   readonly onChangeTranslateX$: Observable<number>
   readonly onCompleteEnd$: Observable<CompleteEndResult>
-  readonly otherSubs$: Observable<void>
+  /**
+   * Merged pipeline for gesture change/end side effects. Must be subscribed
+   * to activate the streams (bridge subscribes with a no-op).
+   */
+  readonly gesturePipeline$: Observable<void>
 
   private containerLayout: Layout | undefined = undefined
   private readonly changeValues$ = new Subject<ChangeGesture>()
@@ -56,22 +61,23 @@ export class GestureCoordinator {
     const onCompleteEnd$ = new Subject<CompleteEndResult>()
     this.onCompleteEnd$ = onCompleteEnd$.asObservable()
 
-    this.otherSubs$ = merge(
+    this.gesturePipeline$ = merge(
       this.changeValues$.pipe(
         filter(
           () =>
             !!this.activeItemCoords && !this.root.getBusy() && !!this.minMax
         ),
         withLatestFrom(this.translateX$),
-        map(
-          ([{ changeX }, current]): TranslationResult => ({
+        map(([{ changeX }, current]): TranslationResult => {
+          const mm = this.minMax!
+          return {
             newX: clamp(
-              current + changeX * 1.25,
-              this.minMax!.min * CELL_SIZE,
-              this.minMax!.max * CELL_SIZE
+              current + changeX * GESTURE_SENSITIVITY,
+              mm.min * CELL_SIZE,
+              mm.max * CELL_SIZE
             )
-          })
-        ),
+          }
+        }),
         tap(({ newX }) => this.translateX$.next(newX))
       ),
       this.endValues$.pipe(
@@ -81,10 +87,12 @@ export class GestureCoordinator {
             !!this.activeItemCoords && !this.root.getBusy() && !!this.minMax
         ),
         map(([_, currentTranslateX]): CompleteEndResult => {
+          const mm = this.minMax!
+          const coords = this.activeItemCoords!
           const to = clamp(
             Math.round(currentTranslateX / CELL_SIZE),
-            this.minMax!.min,
-            this.minMax!.max
+            mm.min,
+            mm.max
           )
           return {
             to,
@@ -93,8 +101,8 @@ export class GestureCoordinator {
                 ? undefined
                 : this.applyTranslation(
                     this.root.getRows(),
-                    this.activeItemCoords!.rowIndex,
-                    this.activeItemCoords!.cellIndex,
+                    coords.rowIndex,
+                    coords.cellIndex,
                     to
                   )
           }

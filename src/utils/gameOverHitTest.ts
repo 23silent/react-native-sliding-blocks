@@ -1,17 +1,15 @@
 import { CELL_SIZE, COLUMNS_COUNT, ROWS_COUNT } from '../model/consts'
+import { GAME_OVER_OVERLAY } from '../model/layoutConsts'
 
-const WIDTH = CELL_SIZE * COLUMNS_COUNT
-const HEIGHT = CELL_SIZE * ROWS_COUNT
-const BOX_WIDTH = 220
-const BOX_HEIGHT = 140
-const BUTTON_WIDTH = 140
-const BUTTON_HEIGHT = 44
+const GAME_WIDTH = CELL_SIZE * COLUMNS_COUNT
+const GAME_HEIGHT = CELL_SIZE * ROWS_COUNT
+const { BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_TOP_OFFSET } = GAME_OVER_OVERLAY
 
 export const GAME_OVER_RESTART_BOUNDS = {
-  left: WIDTH / 2 - BUTTON_WIDTH / 2,
-  right: WIDTH / 2 + BUTTON_WIDTH / 2,
-  top: HEIGHT / 2 + 20,
-  bottom: HEIGHT / 2 + 20 + BUTTON_HEIGHT
+  left: GAME_WIDTH / 2 - BUTTON_WIDTH / 2,
+  right: GAME_WIDTH / 2 + BUTTON_WIDTH / 2,
+  top: GAME_HEIGHT / 2 + BUTTON_TOP_OFFSET,
+  bottom: GAME_HEIGHT / 2 + BUTTON_TOP_OFFSET + BUTTON_HEIGHT
 }
 
 export const hitTestRestart = (x: number, y: number): boolean => {

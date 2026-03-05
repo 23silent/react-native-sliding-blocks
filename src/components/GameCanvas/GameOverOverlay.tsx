@@ -2,13 +2,17 @@ import { Panel, SkiaButton, SkiaLabel, SkiaOverlay } from '../../core/skia'
 import React from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
+import { GAME_OVER_OVERLAY } from '../../model/layoutConsts'
 import { fonts } from '../../utils/fonts'
 import type { SharedValuesMap } from '../../engine/useSharedValuesMap'
 
-const BOX_WIDTH = 220
-const BOX_HEIGHT = 140
-const BUTTON_WIDTH = 140
-const BUTTON_HEIGHT = 44
+const {
+  BOX_WIDTH,
+  BOX_HEIGHT,
+  BUTTON_WIDTH,
+  BUTTON_HEIGHT,
+  BUTTON_TOP_OFFSET
+} = GAME_OVER_OVERLAY
 
 type Props = {
   overlay: SharedValuesMap['overlay']
@@ -24,7 +28,7 @@ export function GameOverOverlay({
   const boxLeft = (gameWidth - BOX_WIDTH) / 2
   const boxTop = (gameHeight - BOX_HEIGHT) / 2
   const buttonLeft = (gameWidth - BUTTON_WIDTH) / 2
-  const buttonTop = gameHeight / 2 + 20
+  const buttonTop = gameHeight / 2 + BUTTON_TOP_OFFSET
 
   const scoreText = useDerivedValue(
     () => `Score: ${Math.round(overlay.gameOverScore.value)}`

@@ -13,7 +13,7 @@ export interface IGameEngine {
   readonly gameOver$: Observable<{ score: number } | null>
   readonly onChangeTranslateX$: Observable<number>
   readonly onCompleteEnd$: Observable<CompleteEndResult>
-  readonly otherSubs$: Observable<void>
+  readonly gesturePipeline$: Observable<void>
 
   restart(): void
   onCompleteGesture(rows: PathSegment[][]): void
@@ -43,7 +43,7 @@ export class GameEngine implements IGameEngine {
   readonly gameOver$: Observable<{ score: number } | null>
   readonly onChangeTranslateX$: Observable<number>
   readonly onCompleteEnd$: Observable<CompleteEndResult>
-  readonly otherSubs$: Observable<void>
+  readonly gesturePipeline$: Observable<void>
 
   constructor() {
     this.game = new GameViewModel()
@@ -56,7 +56,7 @@ export class GameEngine implements IGameEngine {
     this.gameOver$ = this.game.gameOver$
     this.onChangeTranslateX$ = this.gesture.onChangeTranslateX$
     this.onCompleteEnd$ = this.gesture.onCompleteEnd$
-    this.otherSubs$ = this.gesture.otherSubs$
+    this.gesturePipeline$ = this.gesture.gesturePipeline$
   }
 
   restart(): void {

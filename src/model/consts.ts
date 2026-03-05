@@ -7,6 +7,10 @@ export const PADDING = 30
 export const KEYS_SIZE = 48
 export const KEYS = Array.from({ length: KEYS_SIZE }, (_, i) => String(i))
 
+/**
+ * Computed once at module load. Does not update on rotation or dimension change.
+ * For responsive layouts, consider computing CELL_SIZE in a hook.
+ */
 export const CELL_SIZE = (() => {
   const { width } = Dimensions.get('window')
   const size = width - PADDING * 2

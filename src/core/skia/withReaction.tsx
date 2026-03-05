@@ -27,7 +27,7 @@ export function withReaction<P extends object>(
 ): ComponentType<P> {
   function WithReaction(props: P) {
     const ruleOrRules = getRuleOrRules(props)
-    if (Array.isArray(ruleOrRules) && ruleOrRules.length > 0) {
+    if (Array.isArray(ruleOrRules)) {
       useReactionRules(ruleOrRules)
     } else {
       useReactionRule(ruleOrRules as ReactionRule<unknown>)

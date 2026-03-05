@@ -3,6 +3,7 @@ import { Easing, withSequence, withTiming } from 'react-native-reanimated'
 import { scheduleOnRN } from 'react-native-worklets'
 
 import { BinderHook, useStreamBridge } from '../core/binding'
+import { ANIM } from '../model/animConsts'
 import { CELL_SIZE, KEYS } from '../model/consts'
 import type { PathSegment } from '../model/types'
 import { ItemViewModel } from '../viewmodels/ItemViewModel'
@@ -56,7 +57,10 @@ export function useEngineBridge(
       .bindAction(engine.onCompleteEnd$, ({ to, updated }) => {
         shared.translateX.value = withTiming(
           to * CELL_SIZE,
-          { duration: 50, easing: Easing.ease },
+          {
+            duration: ANIM.COMPLETE_SNAP,
+            easing: Easing.ease
+          },
           finished => finished && scheduleOnRN(onComplete, updated)
         )
       })
@@ -81,12 +85,17 @@ export function useEngineBridge(
       .bindAction(engine.gameOver$, value => {
         if (value) {
           shared.overlay.gameOverScore.value = value.score
-          shared.overlay.opacity.value = withTiming(1, { duration: 250 })
+          shared.overlay.opacity.value = withTiming(1, {
+            duration: ANIM.GAME_OVER_IN
+          })
         } else {
-          shared.overlay.opacity.value = withTiming(0, { duration: 200 })
+          shared.overlay.opacity.value = withTiming(0, {
+            duration: ANIM.GAME_OVER_OUT
+          })
         }
       })
-      .bindAction(engine.otherSubs$, nop)
+      /* Subscribe to activate gesture pipeline (change/end side effects) */
+      .bindAction(engine.gesturePipeline$, nop)
       .disposeBy(disposeBag)
 
     KEYS.forEach(key => {
@@ -97,7 +106,9 @@ export function useEngineBridge(
       BinderHook()
         .bindAction(vm.state$, st => {
           slot.translateX.value = st.xValue
-          slot.translateY.value = withTiming(st.yValue, { duration: 200 })
+          slot.translateY.value = withTiming(st.yValue, {
+            duration: ANIM.ITEM_DROP
+          })
           // Don't overwrite opacity during willRemove/removing - let trigger animations run
           if (!st.opacityControlledByAnimation) {
             slot.opacity.value = st.opacityValue
@@ -108,12 +119,12 @@ export function useEngineBridge(
         })
         .bindAction(vm.willRemoveTrigger$, () => {
           slot.opacity.value = withSequence(
-            withTiming(0.5, { duration: 80 }),
-            withTiming(1, { duration: 80 })
+            withTiming(0.5, { duration: ANIM.WILL_REMOVE_PULSE }),
+            withTiming(1, { duration: ANIM.WILL_REMOVE_PULSE })
           )
         })
         .bindAction(vm.removeTrigger$, () => {
-          slot.opacity.value = withTiming(0, { duration: 400 }, finished => {
+          slot.opacity.value = withTiming(0, { duration: ANIM.REMOVE_FADE }, finished => {
             if (finished) scheduleOnRN(removeItem)
           })
         })
@@ -123,6 +134,7 @@ export function useEngineBridge(
         .disposeBy(disposeBag)
     })
     },
+    // engine is sole dep; shared and onCompleteEnd are stable (ref/SharedValues)
     [engine]
   )
 }
