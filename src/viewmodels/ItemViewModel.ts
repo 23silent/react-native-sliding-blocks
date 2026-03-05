@@ -25,6 +25,8 @@ type StateValue = {
   opacityValue: number
   widthValue: number
   colorValue: string
+  /** When true, opacity is controlled by trigger animations (willRemove/removing) - don't overwrite from state$ */
+  opacityControlledByAnimation: boolean
 }
 
 const initialStateValue: StateValue = {
@@ -32,7 +34,8 @@ const initialStateValue: StateValue = {
   xValue: -1 * CELL_SIZE,
   opacityValue: 0,
   widthValue: 0,
-  colorValue: '#fff'
+  colorValue: '#fff',
+  opacityControlledByAnimation: false
 }
 
 /**
@@ -85,12 +88,16 @@ export class ItemViewModel {
     this.state$ = item$.pipe(
       map(item => {
         if (!item || item.state === SegmentState.Idle) return initialStateValue
+        const isRemovingPhase =
+          item.state === SegmentState.WillRemove ||
+          item.state === SegmentState.Removing
         return {
           yValue: item.rowIndex * CELL_SIZE,
           xValue: item.start * CELL_SIZE,
           widthValue: (item.end - item.start) * CELL_SIZE,
           opacityValue: 0.8,
-          colorValue: item.color
+          colorValue: item.color,
+          opacityControlledByAnimation: isRemovingPhase
         }
       })
     )

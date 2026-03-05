@@ -98,7 +98,10 @@ export function useEngineBridge(
         .bindAction(vm.state$, st => {
           slot.translateX.value = st.xValue
           slot.translateY.value = withTiming(st.yValue, { duration: 200 })
-          slot.opacity.value = st.opacityValue
+          // Don't overwrite opacity during willRemove/removing - let trigger animations run
+          if (!st.opacityControlledByAnimation) {
+            slot.opacity.value = st.opacityValue
+          }
           slot.width.value = st.widthValue
           slot.color.value = st.colorValue
           slot.initialLeft.value = st.xValue
