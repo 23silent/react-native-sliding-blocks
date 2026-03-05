@@ -1,15 +1,5 @@
-import {
-  filter,
-  map,
-  merge,
-  Observable,
-  share,
-  Subject,
-  tap,
-  withLatestFrom
-} from 'rxjs'
+import { filter, map, Observable, share, Subject, tap } from 'rxjs'
 
-import { GESTURE_SENSITIVITY } from '../model/animConsts'
 import { CELL_SIZE, COLUMNS_COUNT } from '../model/consts'
 import type { PathSegment } from '../model/types'
 import { mapToVoid } from '../core/binding'
@@ -24,11 +14,11 @@ export interface IRootForGesture {
 
 export type CompleteEndResult = { to: number; updated?: PathSegment[][] }
 
+export type GestureBounds = { minPx: number; maxPx: number }
+
 type Layout = { x: number; y: number }
 type BeginGesture = { absoluteX: number; absoluteY: number }
-type ChangeGesture = { changeX: number }
 type MinMax = { min: number; max: number }
-type TranslationResult = { newX: number }
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(Math.max(value, min), max)
@@ -36,80 +26,66 @@ const clamp = (value: number, min: number, max: number): number =>
 /**
  * GestureCoordinator - ViewModel for gesture interaction.
  * Translates pan/tap into translateX and complete-end events.
+ *
+ * Pan translateX updates during drag are handled on the UI thread via
+ * gestureBounds$; only onEnd receives the final translateX from the view layer.
  */
 export class GestureCoordinator {
   readonly onChangeTranslateX$: Observable<number>
   readonly onCompleteEnd$: Observable<CompleteEndResult>
+  /** Emits gesture bounds (px) on begin, null on end. Used for UI-thread pan updates. */
+  readonly gestureBounds$: Observable<GestureBounds | null>
   /**
-   * Merged pipeline for gesture change/end side effects. Must be subscribed
-   * to activate the streams (bridge subscribes with a no-op).
+   * Pipeline for gesture end. Must be subscribed to activate (bridge subscribes).
    */
   readonly gesturePipeline$: Observable<void>
 
   private containerLayout: Layout | undefined = undefined
-  private readonly changeValues$ = new Subject<ChangeGesture>()
-  private readonly endValues$ = new Subject<void>()
+  private readonly endValues$ = new Subject<number>()
   private minMax: MinMax | undefined = undefined
   private activeItemCoords:
     | { rowIndex: number; cellIndex: number }
     | undefined = undefined
   private readonly translateX$ = new Subject<number>()
+  private readonly gestureBoundsSubject$ = new Subject<GestureBounds | null>()
 
   constructor(private readonly root: IRootForGesture) {
     this.onChangeTranslateX$ = this.translateX$.asObservable()
+    this.gestureBounds$ = this.gestureBoundsSubject$.asObservable()
 
     const onCompleteEnd$ = new Subject<CompleteEndResult>()
     this.onCompleteEnd$ = onCompleteEnd$.asObservable()
 
-    this.gesturePipeline$ = merge(
-      this.changeValues$.pipe(
-        filter(
-          () =>
-            !!this.activeItemCoords && !this.root.getBusy() && !!this.minMax
-        ),
-        withLatestFrom(this.translateX$),
-        map(([{ changeX }, current]): TranslationResult => {
-          const mm = this.minMax!
-          return {
-            newX: clamp(
-              current + changeX * GESTURE_SENSITIVITY,
-              mm.min * CELL_SIZE,
-              mm.max * CELL_SIZE
-            )
-          }
-        }),
-        tap(({ newX }) => this.translateX$.next(newX))
+    this.gesturePipeline$ = this.endValues$.pipe(
+      filter(
+        () =>
+          !!this.activeItemCoords && !this.root.getBusy() && !!this.minMax
       ),
-      this.endValues$.pipe(
-        withLatestFrom(this.translateX$),
-        filter(
-          () =>
-            !!this.activeItemCoords && !this.root.getBusy() && !!this.minMax
-        ),
-        map(([_, currentTranslateX]): CompleteEndResult => {
-          const mm = this.minMax!
-          const coords = this.activeItemCoords!
-          const to = clamp(
-            Math.round(currentTranslateX / CELL_SIZE),
-            mm.min,
-            mm.max
-          )
-          return {
-            to,
-            updated:
-              to === 0
-                ? undefined
-                : this.applyTranslation(
-                    this.root.getRows(),
-                    coords.rowIndex,
-                    coords.cellIndex,
-                    to
-                  )
-          }
-        }),
-        tap(result => onCompleteEnd$.next(result))
-      )
-    ).pipe(mapToVoid(), share())
+      map((currentTranslateX): CompleteEndResult => {
+        const mm = this.minMax!
+        const coords = this.activeItemCoords!
+        const to = clamp(
+          Math.round(currentTranslateX / CELL_SIZE),
+          mm.min,
+          mm.max
+        )
+        return {
+          to,
+          updated:
+            to === 0
+              ? undefined
+              : this.applyTranslation(
+                  this.root.getRows(),
+                  coords.rowIndex,
+                  coords.cellIndex,
+                  to
+                )
+        }
+      }),
+      tap(result => onCompleteEnd$.next(result)),
+      mapToVoid(),
+      share()
+    )
   }
 
   private applyTranslation(
@@ -172,18 +148,22 @@ export class GestureCoordinator {
     })
 
     this.translateX$.next(0)
+    this.gestureBoundsSubject$.next({
+      minPx: min * CELL_SIZE,
+      maxPx: max * CELL_SIZE
+    })
   }
 
-  onChange(e: ChangeGesture): void {
-    this.changeValues$.next(e)
-  }
-
-  onEnd(): void {
-    this.endValues$.next()
+  /**
+   * Called when pan ends. Pass current translateX (px) from the view layer.
+   */
+  onEnd(currentTranslateX: number): void {
+    this.endValues$.next(currentTranslateX)
   }
 
   onAnimationFinish(): void {
     this.translateX$.next(0)
+    this.gestureBoundsSubject$.next(null)
     this.minMax = undefined
     this.activeItemCoords = undefined
     this.root.setActiveItem(undefined)

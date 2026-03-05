@@ -24,6 +24,12 @@ export type SharedValuesMap = {
   score: SharedValue<number>
   multiplier: SharedValue<number>
   translateX: SharedValue<number>
+  /** Bounds for pan gesture (UI-thread only). Set on begin, cleared on end. */
+  gesture: {
+    active: SharedValue<boolean>
+    minPx: SharedValue<number>
+    maxPx: SharedValue<number>
+  }
   indicator: {
     opacity: SharedValue<number>
     width: SharedValue<number>
@@ -48,6 +54,12 @@ export function useSharedValuesMap(): SharedValuesMap {
   const score = useSharedValue(0)
   const multiplier = useSharedValue(0)
   const translateX = useSharedValue(0)
+
+  const gesture = {
+    active: useSharedValue(false),
+    minPx: useSharedValue(0),
+    maxPx: useSharedValue(0)
+  }
 
   const indicator = {
     opacity: useSharedValue(0),
@@ -127,6 +139,7 @@ export function useSharedValuesMap(): SharedValuesMap {
     score,
     multiplier,
     translateX,
+    gesture,
     indicator,
     ghost,
     overlay,

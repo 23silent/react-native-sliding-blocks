@@ -3,7 +3,10 @@ import type { Observable } from 'rxjs'
 import type { ActiveItem, PathSegment, PathSegmentExt } from '../model/types'
 import { GameViewModel } from './GameViewModel'
 import { GestureCoordinator } from './GestureCoordinator'
-import type { CompleteEndResult } from './GestureCoordinator'
+import type {
+  CompleteEndResult,
+  GestureBounds
+} from './GestureCoordinator'
 
 export interface IGameEngine {
   readonly items$: Observable<Partial<Record<string, PathSegmentExt>>>
@@ -13,6 +16,7 @@ export interface IGameEngine {
   readonly gameOver$: Observable<{ score: number } | null>
   readonly onChangeTranslateX$: Observable<number>
   readonly onCompleteEnd$: Observable<CompleteEndResult>
+  readonly gestureBounds$: Observable<GestureBounds | null>
   readonly gesturePipeline$: Observable<void>
 
   restart(): void
@@ -23,8 +27,7 @@ export interface IGameEngine {
   getRows(): PathSegment[][]
   setGestureContainerLayout(layout: { x: number; y: number }): void
   onGestureBegin(payload: { absoluteX: number; absoluteY: number }): void
-  onGestureChange(payload: { changeX: number }): void
-  onGestureEnd(): void
+  onGestureEnd(currentTranslateX: number): void
   onAnimationFinish(): void
 }
 
@@ -43,6 +46,7 @@ export class GameEngine implements IGameEngine {
   readonly gameOver$: Observable<{ score: number } | null>
   readonly onChangeTranslateX$: Observable<number>
   readonly onCompleteEnd$: Observable<CompleteEndResult>
+  readonly gestureBounds$: Observable<GestureBounds | null>
   readonly gesturePipeline$: Observable<void>
 
   constructor() {
@@ -56,6 +60,7 @@ export class GameEngine implements IGameEngine {
     this.gameOver$ = this.game.gameOver$
     this.onChangeTranslateX$ = this.gesture.onChangeTranslateX$
     this.onCompleteEnd$ = this.gesture.onCompleteEnd$
+    this.gestureBounds$ = this.gesture.gestureBounds$
     this.gesturePipeline$ = this.gesture.gesturePipeline$
   }
 
@@ -91,12 +96,8 @@ export class GameEngine implements IGameEngine {
     this.gesture.onBegin(payload)
   }
 
-  onGestureChange(payload: { changeX: number }): void {
-    this.gesture.onChange(payload)
-  }
-
-  onGestureEnd(): void {
-    this.gesture.onEnd()
+  onGestureEnd(currentTranslateX: number): void {
+    this.gesture.onEnd(currentTranslateX)
   }
 
   onAnimationFinish(): void {

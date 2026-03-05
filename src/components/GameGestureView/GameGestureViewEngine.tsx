@@ -1,13 +1,16 @@
-import React, { PropsWithChildren, useCallback, useEffect } from 'react'
+import React, { PropsWithChildren, useCallback, useEffect, useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { runOnJS } from 'react-native-reanimated'
 
+import { GESTURE_SENSITIVITY } from '../../model/animConsts'
 import type { IGameEngine } from '../../engine'
+import type { SharedValuesMap } from '../../engine/useSharedValuesMap'
 import type { GameLayout } from '../GameCanvas'
 
 type GameGestureViewEngineProps = PropsWithChildren<{
   engine: IGameEngine
+  shared: SharedValuesMap
   layout: GameLayout
   onTapOrRestart: (x: number, y: number) => boolean
 }>
@@ -15,6 +18,7 @@ type GameGestureViewEngineProps = PropsWithChildren<{
 export const GameGestureViewEngine = ({
   children,
   engine,
+  shared,
   layout,
   onTapOrRestart
 }: GameGestureViewEngineProps) => {
@@ -28,10 +32,10 @@ export const GameGestureViewEngine = ({
   const handleTapOrRestart = useCallback(
     (x: number, y: number) => {
       if (!onTapOrRestart(x, y)) {
-        engine.onGestureEnd()
+        engine.onGestureEnd(shared.translateX.value)
       }
     },
-    [engine, onTapOrRestart]
+    [engine, onTapOrRestart, shared.translateX]
   )
 
   const handleGestureBegin = useCallback(
@@ -41,28 +45,41 @@ export const GameGestureViewEngine = ({
     [engine]
   )
 
-  const handleGestureChange = useCallback((payload: { changeX: number }) => {
-    engine.onGestureChange(payload)
-  }, [engine])
-
   const handleGestureEnd = useCallback(() => {
-    engine.onGestureEnd()
-  }, [engine])
+    engine.onGestureEnd(shared.translateX.value)
+  }, [engine, shared.translateX])
 
-  const tap = Gesture.Tap().onEnd(e =>
-    runOnJS(handleTapOrRestart)(e.absoluteX, e.absoluteY)
+  const tap = useMemo(
+    () =>
+      Gesture.Tap().onEnd(e =>
+        runOnJS(handleTapOrRestart)(e.absoluteX, e.absoluteY)
+      ),
+    [handleTapOrRestart]
   )
-  const pan = Gesture.Pan()
-    .onBegin(e =>
-      runOnJS(handleGestureBegin)({
-        absoluteX: e.absoluteX,
-        absoluteY: e.absoluteY
-      })
-    )
-    .onChange(e => runOnJS(handleGestureChange)({ changeX: e.changeX }))
-    .onEnd(() => runOnJS(handleGestureEnd)())
 
-  const gesture = Gesture.Race(pan, tap)
+  const pan = useMemo(
+    () =>
+      Gesture.Pan()
+        .onBegin(e =>
+          runOnJS(handleGestureBegin)({
+            absoluteX: e.absoluteX,
+            absoluteY: e.absoluteY
+          })
+        )
+        .onChange(e => {
+          'worklet'
+          if (!shared.gesture.active.value) return
+          const current = shared.translateX.value
+          const minPx = shared.gesture.minPx.value
+          const maxPx = shared.gesture.maxPx.value
+          const raw = current + e.changeX * GESTURE_SENSITIVITY
+          shared.translateX.value = Math.min(Math.max(raw, minPx), maxPx)
+        })
+        .onEnd(() => runOnJS(handleGestureEnd)()),
+    [handleGestureBegin, handleGestureEnd, shared]
+  )
+
+  const gesture = useMemo(() => Gesture.Race(pan, tap), [pan, tap])
 
   return (
     <View style={StyleSheet.absoluteFill}>

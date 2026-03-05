@@ -99,6 +99,7 @@ export const GameRootView = memo((): React.JSX.Element => {
   return (
     <GameGestureViewEngine
       engine={engine}
+      shared={shared}
       layout={layout}
       onTapOrRestart={handleTapOrRestart}
     >

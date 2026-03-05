@@ -55,6 +55,15 @@ export function useEngineBridge(
       .bindAction(engine.onChangeTranslateX$, v => {
         shared.translateX.value = v
       })
+      .bindAction(engine.gestureBounds$, bounds => {
+        if (bounds) {
+          shared.gesture.active.value = true
+          shared.gesture.minPx.value = bounds.minPx
+          shared.gesture.maxPx.value = bounds.maxPx
+        } else {
+          shared.gesture.active.value = false
+        }
+      })
       .bindAction(engine.onCompleteEnd$, ({ to, updated }) => {
         shared.translateX.value = withTiming(
           to * CELL_SIZE,
