@@ -5,6 +5,7 @@ import {
   useAnimatedReaction,
   useDerivedValue,
   useSharedValue,
+  withSequence,
   withTiming
 } from 'react-native-reanimated'
 
@@ -46,6 +47,12 @@ export const Item = ({
         shared.color.value = st.colorValue
 
         initialLeft.value = st.xValue
+      })
+      .bindAction(viewModel.willRemoveTrigger$, () => {
+        shared.opacity.value = withSequence(
+          withTiming(0.5, { duration: 80 }),
+          withTiming(1, { duration: 80 })
+        )
       })
       .bindAction(viewModel.removeTrigger$, () => {
         shared.opacity.value = withTiming(0, { duration: 400 }, finished => {

@@ -10,6 +10,7 @@ import {
 } from 'rxjs'
 
 import { CELL_SIZE, ROWS_COUNT } from '../../consts'
+import { SegmentState } from '../../types'
 import { nop } from '../../utils/nop'
 import { RootViewModel } from '../GameRootView/viewModel'
 
@@ -33,6 +34,7 @@ export class ItemViewModel {
   private readonly gestureX$ = new Subject<number>()
 
   readonly state$: Observable<StateValue>
+  readonly willRemoveTrigger$: Observable<void>
   readonly removeTrigger$: Observable<void>
   readonly isActive$: Observable<boolean>
 
@@ -56,14 +58,33 @@ export class ItemViewModel {
       )
     )
 
+    this.willRemoveTrigger$ = item$.pipe(
+      pairwise(),
+      filter(
+        ([prev, next]) =>
+          prev?.state !== SegmentState.WillRemove &&
+          next?.state === SegmentState.WillRemove
+      ),
+      map(nop)
+    )
+
     this.removeTrigger$ = item$.pipe(
       pairwise(),
-      filter(([prev, next]) => !prev?.removing && !!next?.removing),
+      filter(
+        ([prev, next]) =>
+          prev?.state !== SegmentState.Removing &&
+          next?.state === SegmentState.Removing
+      ),
       map(nop)
     )
 
     this.state$ = item$.pipe(
-      filter(item => !item?.removing),
+      filter(
+        item =>
+          item &&
+          item.state !== SegmentState.Removing &&
+          item.state !== SegmentState.Idle
+      ),
       map(item =>
         item
           ? {

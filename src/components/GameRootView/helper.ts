@@ -1,6 +1,62 @@
 import { KEYS_SIZE } from '../../consts'
-import { PathSegmentExt, TaskQueueItem } from '../../types'
+import {
+  isIdleSlot,
+  PathSegment,
+  PathSegmentExt,
+  SegmentState,
+  TaskQueueItem
+} from '../../types'
 import { rowsToItemsMap } from '../../utils/transform'
+
+const assignItemsToSlots = (
+  itemsMap: Record<string, PathSegmentExt>,
+  prevState: Record<string, PathSegmentExt | undefined>,
+  overwriteIndex: number
+): { newItems: Record<string, PathSegmentExt | undefined>; nextIndex: number } => {
+  const newItems = { ...prevState }
+  const idToKey = new Map<string, string>()
+  const orderedKeys = Object.keys(newItems).sort(
+    (a, b) => parseInt(a) - parseInt(b)
+  )
+
+  for (const [key, item] of Object.entries(newItems)) {
+    if (item) idToKey.set(item.id, key)
+  }
+
+  let currentIndex = overwriteIndex
+
+  for (const item of Object.values(itemsMap)) {
+    const existingKey = idToKey.get(item.id)
+    if (existingKey) {
+      newItems[existingKey] = item
+      continue
+    }
+
+    let inserted = false
+    let checked = 0
+
+    while (checked < KEYS_SIZE) {
+      const targetKey = orderedKeys[currentIndex]
+      if (isIdleSlot(newItems[targetKey])) {
+        newItems[targetKey] = item
+        idToKey.set(item.id, targetKey)
+        inserted = true
+        break
+      }
+      currentIndex = (currentIndex + 1) % KEYS_SIZE
+      checked++
+    }
+
+    if (!inserted) {
+      const fallbackKey = orderedKeys[overwriteIndex]
+      newItems[fallbackKey] = item
+      idToKey.set(item.id, fallbackKey)
+      currentIndex = (overwriteIndex + 1) % KEYS_SIZE
+    }
+  }
+
+  return { newItems, nextIndex: currentIndex }
+}
 
 export const prepareTasks = (
   tasks: TaskQueueItem[],
@@ -10,86 +66,72 @@ export const prepareTasks = (
   prevOverwriteIndex: number
 ) => {
   let nextOverwriteIndex = prevOverwriteIndex
-
   let ps = prevState
-
-  const newState = []
+  const newState: Array<{
+    rows: PathSegment[][]
+    newState: Record<string, PathSegmentExt | undefined>
+    step: string
+    nextOverwriteIndex: number
+    score: number
+    playRemoveSound?: boolean
+  }> = []
 
   for (let index = 0; index < tasks.length; index++) {
     const { rows, rowsToRemove, step } = tasks[index]
-
     let score = 0
 
     const itemsMap = rowsToItemsMap(rows)
 
     if (rowsToRemove?.length) {
       const toRemove = rowsToRemove?.flat() || []
-
-      // Update score and combo
       if (toRemove?.length > 0) {
         score = toRemove.reduce((acc, item) => acc + item.end - item.start, 0)
       }
-      const removalMap = rowsToItemsMap(rowsToRemove, true)
-      Object.assign(itemsMap, removalMap)
+
+      // Two-phase removal: WillRemove (brief highlight) then Removing (fade out)
+      const itemsWithWillRemove = {
+        ...itemsMap,
+        ...rowsToItemsMap(rowsToRemove, SegmentState.WillRemove)
+      }
+      const itemsWithRemoving = {
+        ...itemsMap,
+        ...rowsToItemsMap(rowsToRemove, SegmentState.Removing)
+      }
+
+      const phase1 = assignItemsToSlots(itemsWithWillRemove, ps, nextOverwriteIndex)
+      newState.push({
+        rows,
+        newState: phase1.newItems,
+        step,
+        nextOverwriteIndex: phase1.nextIndex,
+        score,
+        playRemoveSound: true
+      })
+
+      const phase2 = assignItemsToSlots(itemsWithRemoving, phase1.newItems, phase1.nextIndex)
+      newState.push({
+        rows,
+        newState: phase2.newItems,
+        step,
+        nextOverwriteIndex: phase2.nextIndex,
+        score: 0,
+        playRemoveSound: false
+      })
+
+      ps = phase2.newItems
+      nextOverwriteIndex = phase2.nextIndex
+    } else {
+      const result = assignItemsToSlots(itemsMap, ps, nextOverwriteIndex)
+      newState.push({
+        rows,
+        newState: result.newItems,
+        step,
+        nextOverwriteIndex: result.nextIndex,
+        score
+      })
+      ps = result.newItems
+      nextOverwriteIndex = result.nextIndex
     }
-
-    const newItems = { ...ps }
-    const idToKey = new Map<string, string>()
-    const orderedKeys = Object.keys(newItems).sort(
-      (a, b) => parseInt(a) - parseInt(b)
-    )
-
-    for (const [key, item] of Object.entries(newItems)) {
-      if (item) {
-        idToKey.set(item.id, key)
-      }
-    }
-
-    let currentIndex = nextOverwriteIndex
-
-    // itemsMap is always a Record from rowsToItemsMap; assign items to slot keys
-    for (const item of Object.values(itemsMap)) {
-      const existingKey = idToKey.get(item.id)
-      if (existingKey) {
-        newItems[existingKey] = item
-        continue
-      }
-
-      let inserted = false
-      let checked = 0
-
-      while (checked < KEYS_SIZE) {
-        const targetKey = orderedKeys[currentIndex]
-        if (!newItems[targetKey]) {
-          newItems[targetKey] = item
-          idToKey.set(item.id, targetKey)
-          inserted = true
-          break
-        }
-
-        currentIndex = (currentIndex + 1) % KEYS_SIZE
-        checked++
-      }
-
-      if (!inserted) {
-        const fallbackKey = orderedKeys[nextOverwriteIndex]
-        newItems[fallbackKey] = item
-        idToKey.set(item.id, fallbackKey)
-        currentIndex = (nextOverwriteIndex + 1) % KEYS_SIZE
-      }
-    }
-
-    nextOverwriteIndex = currentIndex
-
-    ps = newItems
-
-    newState.push({
-      rows,
-      newState: newItems,
-      step,
-      nextOverwriteIndex,
-      score
-    })
   }
 
   return newState

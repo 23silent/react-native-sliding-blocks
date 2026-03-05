@@ -70,7 +70,8 @@ export class RootViewModel {
         newState: newItems,
         step,
         nextOverwriteIndex,
-        score
+        score,
+        playRemoveSound = true
       } = tasks[index]
 
       if (step === 'gesture') {
@@ -87,10 +88,12 @@ export class RootViewModel {
       }
 
       if (step === 'remove') {
-        try {
-          SoundPlayer.playSoundFile('big', 'mp3')
-        } catch (error) {
-          nop()
+        if (playRemoveSound) {
+          try {
+            SoundPlayer.playSoundFile('big', 'mp3')
+          } catch (error) {
+            nop()
+          }
         }
 
         // Update score and combo

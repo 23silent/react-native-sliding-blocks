@@ -1,17 +1,33 @@
+/** Segment lifecycle state */
+export enum SegmentState {
+  /** Ready to reuse / slot empty */
+  Idle = 'idle',
+  /** On board, active */
+  InUse = 'inuse',
+  /** Marked for removal (e.g. fulfilled row) */
+  WillRemove = 'willRemove',
+  /** Animating out */
+  Removing = 'removing'
+}
+
 export type PathSegment = {
   id: string
   start: number
   end: number
   color: string
   super: boolean
-  willRemove?: boolean
 }
 
 export type PathSegmentExt = PathSegment & {
   rowIndex: number
   itemIndex: number
-  removing: boolean
+  state: SegmentState
 }
+
+/** Returns true when slot has no segment (Idle / ready to reuse) */
+export const isIdleSlot = (
+  item: PathSegmentExt | undefined
+): item is undefined => item === undefined
 
 export type ItemsMap = Record<string, PathSegmentExt>
 
