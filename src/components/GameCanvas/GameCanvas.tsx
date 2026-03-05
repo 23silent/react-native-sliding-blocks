@@ -1,6 +1,15 @@
-import { Canvas, Fill, Group, Image, useImage } from '@shopify/react-native-skia'
+import {
+  Canvas,
+  Fill,
+  Group,
+  Image,
+  LinearGradient,
+  RoundedRect,
+  useImage,
+  vec
+} from '@shopify/react-native-skia'
 
-import { CheckerboardGrid, Panel, SkiaLabel } from '../../core/skia'
+import { CheckerboardGrid, Panel, SkiaButton, SkiaLabel } from '../../core/skia'
 import React, { memo } from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
@@ -10,6 +19,7 @@ import {
   KEYS,
   ROWS_COUNT
 } from '../../model/consts'
+import { SCORE_BAR, TOP_RESTART } from '../../model/layoutConsts'
 import { fonts } from '../../utils/fonts'
 import type { SharedValuesMap } from '../../engine/useSharedValuesMap'
 import { GameCanvasGhost } from './GameCanvasGhost'
@@ -51,6 +61,33 @@ export const GameCanvas = memo(function GameCanvas({
     () => `${Math.round(shared.multiplier.value)}`
   )
 
+  const {
+    HEIGHT: barHeight,
+    PADDING_H: barPadding,
+    RESTART_GAP,
+    STATS_GAP,
+    PILL_PADDING,
+    PILL_MIN_WIDTH
+  } = SCORE_BAR
+
+  const restartLeft = layout.actionsBarLeft + TOP_RESTART.LEFT_OFFSET
+  const restartTop = TOP_RESTART.TOP_OFFSET
+  const statsZoneLeft = restartLeft + TOP_RESTART.WIDTH + RESTART_GAP
+  const statsZoneRight = layout.actionsBarLeft + layout.actionsBarWidth - barPadding
+  const statsZoneWidth = Math.max(0, statsZoneRight - statsZoneLeft)
+  const pillWidth = Math.max(
+    PILL_MIN_WIDTH,
+    (statsZoneWidth - STATS_GAP) / 2
+  )
+  const scoreLeft = statsZoneLeft
+  const multiplierLeft = scoreLeft + pillWidth + STATS_GAP
+  const pillTop = (barHeight - 32) / 2
+  const pillHeight = 32
+  const pillRadius = 10
+  const labelY = pillTop + 10
+  const valueY = pillTop + 26
+  const textLeft = PILL_PADDING
+
   return (
     <Canvas style={{ flex: 1 }}>
       {bgImage ? (
@@ -67,45 +104,78 @@ export const GameCanvas = memo(function GameCanvas({
       )}
       <Fill color="rgba(255,255,255,0.3)" />
       <Group transform={[{ translateY: layout.contentTop }]}>
-        <Panel
+        {/* Score bar — gradient background with subtle glass effect */}
+        <RoundedRect
           x={layout.actionsBarLeft}
           y={0}
           width={layout.actionsBarWidth}
-          height={50}
+          height={barHeight}
+          r={14}
+        >
+          <LinearGradient
+            start={vec(0, 0)}
+            end={vec(layout.actionsBarWidth, barHeight)}
+            colors={[
+              'rgba(30,41,59,0.92)',
+              'rgba(15,23,42,0.95)',
+              'rgba(15,23,42,0.98)'
+            ]}
+          />
+        </RoundedRect>
+        <SkiaButton
+          x={restartLeft}
+          y={restartTop}
+          width={TOP_RESTART.WIDTH}
+          height={TOP_RESTART.HEIGHT}
           r={10}
-          color="rgba(0,0,0,0.4)"
-        />
-        <SkiaLabel
-          x={layout.actionsBarLeft + 20}
-          y={38}
-          text="Restart"
+          color="rgba(59,130,246,0.85)"
+          label="Restart"
+          labelX={restartLeft + (TOP_RESTART.WIDTH - 50) / 2}
+          labelY={restartTop + TOP_RESTART.HEIGHT / 2 + 8}
           font={fonts.button}
-          color="white"
+          textColor="white"
+        />
+        {/* Center stats — Score and Multiplier pills (responsive width) */}
+        <RoundedRect
+          x={scoreLeft}
+          y={pillTop}
+          width={pillWidth}
+          height={pillHeight}
+          r={pillRadius}
+          color="rgba(59,130,246,0.25)"
         />
         <SkiaLabel
-          x={layout.actionsBarLeft + layout.actionsBarWidth / 2 - 80}
-          y={18}
+          x={scoreLeft + textLeft}
+          y={labelY}
           text="Score"
           font={fonts.label}
-          color="white"
+          color="rgba(203,213,225,0.9)"
         />
         <SkiaLabel
-          x={layout.actionsBarLeft + layout.actionsBarWidth / 2 - 60}
-          y={42}
+          x={scoreLeft + textLeft}
+          y={valueY}
           text={scoreText}
           font={fonts.score}
           color="white"
         />
-        <SkiaLabel
-          x={layout.actionsBarLeft + layout.actionsBarWidth / 2 + 10}
-          y={18}
-          text="Multiplier"
-          font={fonts.label}
-          color="white"
+        <RoundedRect
+          x={multiplierLeft}
+          y={pillTop}
+          width={pillWidth}
+          height={pillHeight}
+          r={pillRadius}
+          color="rgba(168,85,247,0.2)"
         />
         <SkiaLabel
-          x={layout.actionsBarLeft + layout.actionsBarWidth / 2 + 30}
-          y={42}
+          x={multiplierLeft + textLeft}
+          y={labelY}
+          text="Multiplier"
+          font={fonts.label}
+          color="rgba(203,213,225,0.9)"
+        />
+        <SkiaLabel
+          x={multiplierLeft + textLeft}
+          y={valueY}
           text={multiplierText}
           font={fonts.score}
           color="white"
