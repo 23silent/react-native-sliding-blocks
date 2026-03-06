@@ -9,14 +9,18 @@ type Props = {
   slot: ItemSlotSharedValues
   translateX: SharedValue<number>
   block: BlockMap
+  useSkiaDrawing?: boolean
 }
 
 export function GameCanvasItem({
   slot,
   translateX,
-  block
+  block,
+  useSkiaDrawing = false
 }: Props): React.JSX.Element {
   useReactionRule(activeGestureSync(slot, translateX))
 
-  return <BlockImage slot={slot} block={block} />
+  return (
+    <BlockImage slot={slot} block={block} useSkiaDrawing={useSkiaDrawing} />
+  )
 }

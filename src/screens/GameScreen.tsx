@@ -23,6 +23,7 @@ export function GameScreen({ onMenuPress }: Props): React.JSX.Element {
   return (
     <View style={styles.container}>
       <GameRootView
+        blockRenderMode="skia" 
         onMenuPress={onMenuPress}
         onLoadProgress={onLoadProgress}
         onLoadComplete={onLoadComplete}

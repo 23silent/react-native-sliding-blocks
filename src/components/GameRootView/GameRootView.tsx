@@ -18,7 +18,7 @@ import {
   useSharedValuesMap
 } from '../../engine'
 import { useBlocks } from '../../hooks/useBlocks'
-import { GameCanvas } from '../GameCanvas'
+import { GameCanvas, type BlockRenderMode } from '../GameCanvas'
 import { GameGestureViewEngine } from '../GameGestureView/GameGestureViewEngine'
 import { hitTestRestart as hitTestGameOverRestart } from '../../utils/gameOverHitTest'
 import { hitTestPauseOverlay } from '../../utils/pauseOverlayHitTest'
@@ -49,12 +49,15 @@ const hitTestTopPause = (
 
 type GameRootViewProps = {
   onMenuPress?: () => void
+  /** 'image' (default) = PNG assets; 'skia' = draw blocks with Skia primitives (no assets) */
+  blockRenderMode?: BlockRenderMode
   onLoadProgress?: (progress: number) => void
   onLoadComplete?: () => void
 }
 
 export const GameRootView = memo(function GameRootView({
   onMenuPress,
+  blockRenderMode = 'image',
   onLoadProgress,
   onLoadComplete
 }: GameRootViewProps = {}): React.JSX.Element {
@@ -175,6 +178,7 @@ export const GameRootView = memo(function GameRootView({
         screenWidth={screenWidth}
         screenHeight={screenHeight}
         showFinishOption={showFinishOption}
+        blockRenderMode={blockRenderMode}
         onLoadProgress={onLoadProgress}
         onLoadComplete={onLoadComplete}
       />

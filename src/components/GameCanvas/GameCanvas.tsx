@@ -61,6 +61,8 @@ export type GameLayout = {
   actionsBarWidth: number
 }
 
+export type BlockRenderMode = 'image' | 'skia'
+
 type GameCanvasProps = {
   shared: SharedValuesMap
   layout: GameLayout
@@ -68,17 +70,25 @@ type GameCanvasProps = {
   screenWidth: number
   screenHeight: number
   showFinishOption?: boolean
+  blockRenderMode?: BlockRenderMode
   onLoadProgress?: (progress: number) => void
   onLoadComplete?: () => void
 }
 
-const TOTAL_ASSETS = 7 * 4 + 1 // blocks (7 colors × 4 sizes) + bg
+const TOTAL_ASSETS_IMAGE = 7 * 4 + 1 // blocks (7 colors × 4 sizes) + bg
+const TOTAL_ASSETS_SKIA = 1 // bg only (blocks drawn with Skia primitives)
 
-function countLoadedAssets(block: BlockMap, bgImage: unknown): number {
+function countLoadedAssets(
+  block: BlockMap,
+  bgImage: unknown,
+  blockRenderMode: BlockRenderMode
+): number {
   let loaded = 0
-  for (const color of Object.keys(block)) {
-    for (let i = 0; i < 4; i++) {
-      if (block[color]?.[i] != null) loaded++
+  if (blockRenderMode === 'image') {
+    for (const color of Object.keys(block)) {
+      for (let i = 0; i < 4; i++) {
+        if (block[color]?.[i] != null) loaded++
+      }
     }
   }
   if (bgImage != null) loaded++
@@ -92,15 +102,19 @@ export const GameCanvas = memo(function GameCanvas({
   screenWidth,
   screenHeight,
   showFinishOption = false,
+  blockRenderMode = 'image',
   onLoadProgress,
   onLoadComplete
 }: GameCanvasProps): React.JSX.Element {
   const bgImage = useImage(require('../../assets/bg.jpg'))
   const completedRef = useRef(false)
+  const useSkiaDrawing = blockRenderMode === 'skia'
+  const totalAssets =
+    blockRenderMode === 'skia' ? TOTAL_ASSETS_SKIA : TOTAL_ASSETS_IMAGE
 
   const progress = useMemo(
-    () => countLoadedAssets(block, bgImage) / TOTAL_ASSETS,
-    [block, bgImage]
+    () => countLoadedAssets(block, bgImage, blockRenderMode) / totalAssets,
+    [block, bgImage, blockRenderMode, totalAssets]
   )
   const isAssetsReady = progress >= 1
 
@@ -281,13 +295,18 @@ export const GameCanvas = memo(function GameCanvas({
           translateX={shared.translateX}
         />
         {/* Ghost */}
-        <GameCanvasGhost ghost={shared.ghost} block={block} />
+        <GameCanvasGhost
+          ghost={shared.ghost}
+          block={block}
+          useSkiaDrawing={useSkiaDrawing}
+        />
         {KEYS.map(key => (
           <GameCanvasItem
             key={key}
             slot={shared.items[key]}
             translateX={shared.translateX}
             block={block}
+            useSkiaDrawing={useSkiaDrawing}
           />
         ))}
         {shared.explosionPool.map((slot, i) => (
