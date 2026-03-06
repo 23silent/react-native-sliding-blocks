@@ -1,3 +1,4 @@
+import { Subject } from 'rxjs'
 import type { Observable } from 'rxjs'
 
 import type { ActiveItem, PathSegment, PathSegmentExt } from '../model/types'
@@ -18,8 +19,12 @@ export interface IGameEngine {
   readonly onCompleteEnd$: Observable<CompleteEndResult>
   readonly gestureBounds$: Observable<GestureBounds | null>
   readonly gesturePipeline$: Observable<void>
+  /** Emits when the current items batch animations have finished. Used to drive the task pipeline. */
+  readonly stepComplete$: Observable<void>
 
   restart(): void
+  /** Single entry point when gesture completes (snap animation finished). Applies gesture, starts task pipeline, clears active state. */
+  onGestureComplete(updated?: PathSegment[][]): void
   onCompleteGesture(rows: PathSegment[][]): void
   setActiveItem(item?: ActiveItem): void
   removeItem(key: string): void
@@ -29,6 +34,10 @@ export interface IGameEngine {
   onGestureBegin(payload: { absoluteX: number; absoluteY: number }): void
   onGestureEnd(currentTranslateX: number): void
   onAnimationFinish(): void
+  /** Call when items batch animations have settled (from bridge). */
+  signalStepComplete(): void
+  /** Call when game-over overlay fade-out animation completes (from bridge). */
+  signalOverlayFadeOutComplete(): void
 }
 
 /**
@@ -38,6 +47,8 @@ export interface IGameEngine {
 export class GameEngine implements IGameEngine {
   private readonly game: GameViewModel
   private readonly gesture: GestureCoordinator
+  private readonly stepCompleteSubject$ = new Subject<void>()
+  private readonly overlayFadeOutCompleteSubject$ = new Subject<void>()
 
   readonly items$: Observable<Partial<Record<string, PathSegmentExt>>>
   readonly activeItem$: Observable<ActiveItem | undefined>
@@ -48,9 +59,14 @@ export class GameEngine implements IGameEngine {
   readonly onCompleteEnd$: Observable<CompleteEndResult>
   readonly gestureBounds$: Observable<GestureBounds | null>
   readonly gesturePipeline$: Observable<void>
+  readonly stepComplete$: Observable<void>
 
   constructor() {
-    this.game = new GameViewModel()
+    this.stepComplete$ = this.stepCompleteSubject$.asObservable()
+    this.game = new GameViewModel(
+      this.stepComplete$,
+      this.overlayFadeOutCompleteSubject$.asObservable()
+    )
     this.gesture = new GestureCoordinator(this.game)
 
     this.items$ = this.game.onChangeItems$
@@ -66,6 +82,13 @@ export class GameEngine implements IGameEngine {
 
   restart(): void {
     this.game.restart()
+  }
+
+  onGestureComplete(updated?: PathSegment[][]): void {
+    if (updated) {
+      this.game.onCompleteGesture(updated)
+    }
+    this.gesture.onAnimationFinish()
   }
 
   onCompleteGesture(rows: PathSegment[][]): void {
@@ -102,5 +125,13 @@ export class GameEngine implements IGameEngine {
 
   onAnimationFinish(): void {
     this.gesture.onAnimationFinish()
+  }
+
+  signalStepComplete(): void {
+    this.stepCompleteSubject$.next()
+  }
+
+  signalOverlayFadeOutComplete(): void {
+    this.overlayFadeOutCompleteSubject$.next()
   }
 }

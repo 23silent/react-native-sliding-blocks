@@ -28,48 +28,51 @@ export const remove = (
   const removeSet: Set<string>[] = sortedRows.map(() => new Set())
   const superSegments: Array<{ rowIndex: number; item: PathSegment }> = []
 
-  sortedRows.forEach((row, rowIndex) => {
+  for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
     if (fulfilledRows[rowIndex]) {
-      row.forEach(item => removeSet[rowIndex].add(item.id))
-      row.forEach(item => {
-        if (item.super) superSegments.push({ rowIndex, item })
-      })
-    }
-  })
-
-  superSegments.forEach(({ rowIndex, item }) => {
-    const checkAdjacentRow = (adjRowIndex: number) => {
-      if (adjRowIndex < 0 || adjRowIndex >= sortedRows.length) return
-      const adjRow = sortedRows[adjRowIndex]
-      const overlapEnd = item.end
-
-      let left = 0,
-        right = adjRow.length
-      while (left < right) {
-        const mid = (left + right) >> 1
-        adjRow[mid].start < overlapEnd ? (left = mid + 1) : (right = mid)
-      }
-
-      for (let i = 0; i < left; i++) {
-        const adjItem = adjRow[i]
-        if (adjItem.end > item.start) {
-          removeSet[adjRowIndex].add(adjItem.id)
-        }
+      const row = sortedRows[rowIndex]
+      for (let i = 0; i < row.length; i++) {
+        removeSet[rowIndex].add(row[i].id)
+        if (row[i].super) superSegments.push({ rowIndex, item: row[i] })
       }
     }
+  }
 
-    checkAdjacentRow(rowIndex - 1)
-    checkAdjacentRow(rowIndex + 1)
-  })
+  const checkAdjacentRow = (adjRowIndex: number, seg: PathSegment) => {
+    if (adjRowIndex < 0 || adjRowIndex >= sortedRows.length) return
+    const adjRow = sortedRows[adjRowIndex]
+    const overlapEnd = seg.end
+
+    let left = 0
+    let right = adjRow.length
+    while (left < right) {
+      const mid = (left + right) >> 1
+      adjRow[mid].start < overlapEnd ? (left = mid + 1) : (right = mid)
+    }
+
+    for (let i = 0; i < left; i++) {
+      const adjItem = adjRow[i]
+      if (adjItem.end > seg.start) {
+        removeSet[adjRowIndex].add(adjItem.id)
+      }
+    }
+  }
+
+  for (let si = 0; si < superSegments.length; si++) {
+    const { rowIndex, item } = superSegments[si]
+    checkAdjacentRow(rowIndex - 1, item)
+    checkAdjacentRow(rowIndex + 1, item)
+  }
 
   const toUpdate: PathSegment[][] = []
   const toRemove: PathSegment[][] = []
-  sortedRows.forEach((row, rowIndex) => {
+  for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
+    const row = sortedRows[rowIndex]
     const remaining = row.filter(item => !removeSet[rowIndex].has(item.id))
     const removed = row.filter(item => removeSet[rowIndex].has(item.id))
     toUpdate.push(remaining)
     toRemove.push(removed)
-  })
+  }
 
   return { data: toUpdate, toRemove, hasChanges: true }
 }

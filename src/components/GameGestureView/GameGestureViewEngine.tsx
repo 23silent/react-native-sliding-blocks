@@ -1,7 +1,7 @@
 import React, { PropsWithChildren, useCallback, useEffect, useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
-import { runOnJS } from 'react-native-reanimated'
+import { scheduleOnRN } from 'react-native-worklets'
 
 import { GESTURE_SENSITIVITY } from '../../model/animConsts'
 import type { IGameEngine } from '../../engine'
@@ -52,7 +52,7 @@ export const GameGestureViewEngine = ({
   const tap = useMemo(
     () =>
       Gesture.Tap().onEnd(e =>
-        runOnJS(handleTapOrRestart)(e.absoluteX, e.absoluteY)
+        scheduleOnRN(handleTapOrRestart, e.absoluteX, e.absoluteY)
       ),
     [handleTapOrRestart]
   )
@@ -61,7 +61,7 @@ export const GameGestureViewEngine = ({
     () =>
       Gesture.Pan()
         .onBegin(e =>
-          runOnJS(handleGestureBegin)({
+          scheduleOnRN(handleGestureBegin, {
             absoluteX: e.absoluteX,
             absoluteY: e.absoluteY
           })
@@ -75,7 +75,10 @@ export const GameGestureViewEngine = ({
           const raw = current + e.changeX * GESTURE_SENSITIVITY
           shared.translateX.value = Math.min(Math.max(raw, minPx), maxPx)
         })
-        .onEnd(() => runOnJS(handleGestureEnd)()),
+        .onEnd(() => {
+          'worklet'
+          scheduleOnRN(handleGestureEnd)
+        }),
     [handleGestureBegin, handleGestureEnd, shared]
   )
 

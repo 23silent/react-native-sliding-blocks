@@ -1,6 +1,8 @@
 import SoundPlayer from 'react-native-sound-player'
 import { BehaviorSubject, Observable, Subject } from 'rxjs'
+import { take } from 'rxjs/operators'
 
+import { ANIM } from '../model/animConsts'
 import { KEYS, ROWS_COUNT } from '../model/consts'
 import { ProcessData } from '../model/ProcessData'
 import { prepareTasks } from '../model/prepareTasks'
@@ -10,8 +12,7 @@ import type {
   PathSegmentExt,
   TaskQueueItem
 } from '../model/types'
-import { delay } from '../utils/delay'
-import { nop } from '../utils/nop'
+import { runTaskApplyPipeline } from './TaskPipeline'
 
 /**
  * GameViewModel - Main game presentation logic.
@@ -44,7 +45,10 @@ export class GameViewModel {
 
   private processData: ProcessData
 
-  constructor() {
+  constructor(
+    private readonly stepComplete$: Observable<void>,
+    private readonly overlayFadeOutComplete$: Observable<void>
+  ) {
     SoundPlayer.loadSoundFile('small', 'mp3')
     SoundPlayer.loadSoundFile('big', 'mp3')
 
@@ -66,6 +70,12 @@ export class GameViewModel {
   getRows = (): PathSegment[][] => this.rows
   getBusy = (): boolean => this.busy
 
+  private getStepCompleteTimeout(step: string): number {
+    return step === 'remove'
+      ? ANIM.REMOVE_FADE + 50
+      : ANIM.ITEM_DROP + 50
+  }
+
   setBusy = (busy: boolean): void => {
     this.busy = busy
   }
@@ -78,9 +88,29 @@ export class GameViewModel {
   }
 
   onCompleteGesture = (rows: PathSegment[][]): void => {
+    this.applyGestureResultSync(rows)
     this.setBusy(true)
     this.processData.setSegments(rows, 'gesture')
     this.doProcess()
+  }
+
+  /**
+   * Synchronously apply the gesture result to items$ so that when activeItem is cleared,
+   * the bridge receives the new positions and the item doesn't flash back to its initial place.
+   */
+  private applyGestureResultSync = (rows: PathSegment[][]): void => {
+    const task = { step: 'gesture' as const, rows }
+    const prepared = prepareTasks(
+      [task],
+      this.items$.getValue(),
+      this.nextOverwriteIndex
+    )
+    if (prepared.length > 0) {
+      const { rows: r, newState, nextOverwriteIndex } = prepared[0]
+      this.rows = r
+      this.nextOverwriteIndex = nextOverwriteIndex
+      this.items$.next(newState)
+    }
   }
 
   restart = (): void => {
@@ -95,9 +125,10 @@ export class GameViewModel {
     this.items$.next(
       KEYS.reduce((acc, item) => ({ ...acc, [item]: undefined }), {})
     )
-    // When restarting from game over, defer score reset until overlay fades
     if (wasGameOver) {
-      setTimeout(() => this.scoreSubject$.next(0), 250)
+      this.overlayFadeOutComplete$.pipe(take(1)).subscribe(() => {
+        this.scoreSubject$.next(0)
+      })
     } else {
       this.scoreSubject$.next(0)
     }
@@ -115,75 +146,47 @@ export class GameViewModel {
   private applyTask = async (tasks: ReturnType<typeof prepareTasks>) => {
     const versionAtStart = this.applyVersion
     this.setBusy(true)
-
     let hasRemoves = false
+
     for (let index = 0; index < tasks.length; index++) {
       if (this.applyVersion !== versionAtStart) return
+      const task = tasks[index]
+      const { step } = task
 
-      const {
-        rows,
-        newState: newItems,
-        step,
-        nextOverwriteIndex,
-        score,
-        playRemoveSound = true
-      } = tasks[index]
+      if (step === 'gesture' || step === 'idle') continue
 
-      if (step === 'gesture') {
-        try {
-          SoundPlayer.playSoundFile('small', 'mp3')
-        } catch {
-          nop()
-        }
-        continue
-      }
-
-      if (step === 'idle') continue
-
-      if (step === 'remove') {
-        if (playRemoveSound) {
-          try {
-            SoundPlayer.playSoundFile('big', 'mp3')
-          } catch {
-            nop()
-          }
-        }
-        if (score > 0) {
+      await runTaskApplyPipeline({
+        task,
+        stepComplete$: this.stepComplete$,
+        getStepCompleteTimeout: this.getStepCompleteTimeout.bind(this),
+        onScoreUpdate: (score) => {
           this.comboStreak++
           const multiplier = Math.min(this.comboStreak, 5)
           const scoreGained = score * multiplier
           this.scoreSubject$.next(this.scoreSubject$.getValue() + scoreGained)
           this.multiplierSubject$.next(multiplier)
           hasRemoves = true
+        },
+        onApplyState: (nextOverwriteIndex, rows, newItems) => {
+          this.nextOverwriteIndex = nextOverwriteIndex
+          this.rows = rows
+          this.items$.next(newItems)
         }
-      }
-
-      this.nextOverwriteIndex = nextOverwriteIndex
-      this.rows = rows
-      this.items$.next(newItems)
-
-      if (step === 'fit' || step === 'add') {
-        await delay(250)
-      } else {
-        await delay(50)
-      }
+      })
       if (this.applyVersion !== versionAtStart) return
     }
 
     if (this.rows.filter(row => row.length).length === ROWS_COUNT) {
-      const finalScore = this.scoreSubject$.getValue()
-      this.gameOverSubject$.next({ score: finalScore })
+      this.gameOverSubject$.next({ score: this.scoreSubject$.getValue() })
       this.setBusy(false)
       return
     }
-
     if (this.applyVersion !== versionAtStart) return
 
     if (!hasRemoves) {
       this.comboStreak = 0
       this.multiplierSubject$.next(1)
     }
-
     if (this.tempRemoveQueue.size) {
       const newItems = { ...this.items$.getValue() }
       for (const id of this.tempRemoveQueue) {
@@ -199,14 +202,16 @@ export class GameViewModel {
     this.setBusy(false)
     const taskQueue = [...this.taskQueue]
     this.taskQueue = []
-    this.applyTask(
-      prepareTasks(taskQueue, this.items$.getValue(), this.nextOverwriteIndex)
+    const prepared = prepareTasks(
+      taskQueue,
+      this.items$.getValue(),
+      this.nextOverwriteIndex
     )
+    this.applyTask(prepared)
   }
 
   private doProcess = (): void => {
     if (!this.busy) return
-
     while (this.busy) {
       const {
         data: rows,

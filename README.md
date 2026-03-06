@@ -46,9 +46,9 @@ The architecture is built around a few core principles:
 
 - **Single binding point** — One `useEngineBridge` hook wires all engine streams to SharedValues. No per-component subscriptions or BinderHooks. Subscriptions are created once and cleaned up on unmount.
 
-- **React-agnostic engine** — `GameEngine` and its ViewModels (GameViewModel, GestureCoordinator, ItemViewModel) have no React or Reanimated imports. They can be unit-tested without a renderer and reused from non-React entry points.
+- **React-agnostic engine** — `GameEngine` and its ViewModels (GameViewModel, GestureCoordinator) have no React or Reanimated imports. They can be unit-tested without a renderer and reused from non-React entry points.
 
-- **MVVM layering** — **Model** (domain: ProcessData, fit, remove, generate, types). **ViewModels** (presentation: GameViewModel, GestureCoordinator, ItemViewModel, GameEngine). **Binding** (engine: RxJS → SharedValues). **View** (React components that render the Canvas).
+- **MVVM layering** — **Model** (domain: ProcessData, fit, remove, generate, types). **ViewModels** (presentation: GameViewModel, GestureCoordinator, GameEngine). **Binding** (engine: RxJS → SharedValues). **View** (React components that render the Canvas).
 
 ### Reusing for New Games
 
@@ -109,8 +109,7 @@ Here’s what powers the game under the hood:
 │   ├── engine/                 # Game-specific binding (uses core)
 │   ├── components/             # View layer
 │   ├── hooks/
-│   ├── utils/
-│   ├── consts.ts, types.ts     # Re-exports from model
+│   └── utils/
 ├── ios/
 ├── android/
 ├── index.js

@@ -1,5 +1,6 @@
-import { Rect } from '@shopify/react-native-skia'
-import React from 'react'
+import { Group, Picture, Skia } from '@shopify/react-native-skia'
+import React, { memo, useMemo } from 'react'
+import { useDerivedValue } from 'react-native-reanimated'
 
 type Props = {
   rows: number
@@ -17,10 +18,10 @@ const DEFAULT_DARK_OPACITY = 0.2
 const DEFAULT_LIGHT_OPACITY = 0.3
 
 /**
- * Renders a checkerboard grid pattern.
- * Used by game canvas for the playing field background.
+ * Renders a checkerboard grid pattern as a single Skia Picture.
+ * Drawing happens on the UI thread in a worklet - no 80 React nodes, no JS-thread render cost.
  */
-export function CheckerboardGrid({
+export const CheckerboardGrid = memo(function CheckerboardGrid({
   rows,
   cols,
   cellSize,
@@ -28,29 +29,54 @@ export function CheckerboardGrid({
   darkOpacity = DEFAULT_DARK_OPACITY,
   lightOpacity = DEFAULT_LIGHT_OPACITY
 }: Props): React.JSX.Element {
-  const cells: React.ReactNode[] = []
-  for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
-    for (let colIndex = 0; colIndex < cols; colIndex++) {
-      const opacity =
-        rowIndex % 2
-          ? colIndex % 2
-            ? darkOpacity
-            : lightOpacity
-          : !(colIndex % 2)
-            ? darkOpacity
-            : lightOpacity
-      cells.push(
-        <Rect
-          key={`${colIndex}-${rowIndex}`}
-          x={colIndex * cellSize}
-          y={rowIndex * cellSize}
-          width={cellSize}
-          height={cellSize}
-          color={baseColor}
-          opacity={opacity}
-        />
-      )
+  const paint = useMemo(() => Skia.Paint(), [])
+  const recorder = useMemo(() => Skia.PictureRecorder(), [])
+
+  const picture = useDerivedValue(() => {
+    'worklet'
+    const width = cols * cellSize
+    const height = rows * cellSize
+    const canvas = recorder.beginRecording(Skia.XYWHRect(0, 0, width, height))
+
+    for (let rowIndex = 0; rowIndex < rows; rowIndex++) {
+      for (let colIndex = 0; colIndex < cols; colIndex++) {
+        const opacity =
+          rowIndex % 2
+            ? colIndex % 2
+              ? darkOpacity
+              : lightOpacity
+            : colIndex % 2
+              ? lightOpacity
+              : darkOpacity
+        paint.setColor(Skia.Color(baseColor))
+        paint.setAlphaf(opacity)
+        canvas.drawRect(
+          Skia.XYWHRect(
+            colIndex * cellSize,
+            rowIndex * cellSize,
+            cellSize,
+            cellSize
+          ),
+          paint
+        )
+      }
     }
-  }
-  return <>{cells}</>
-}
+
+    return recorder.finishRecordingAsPicture()
+  }, [
+    rows,
+    cols,
+    cellSize,
+    baseColor,
+    darkOpacity,
+    lightOpacity,
+    recorder,
+    paint
+  ])
+
+  return (
+    <Group>
+      <Picture picture={picture} />
+    </Group>
+  )
+})

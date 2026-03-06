@@ -1,5 +1,10 @@
 export { BinderHook, DisposeBag, mapToVoid, useStreamBridge } from './binding'
 export {
+  runPipeline,
+  createPipeline,
+  type PipelineMiddleware
+} from './pipeline'
+export {
   BlockImage,
   CheckerboardGrid,
   Panel,

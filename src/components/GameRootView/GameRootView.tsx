@@ -10,7 +10,12 @@ import {
 } from '../../model/consts'
 import { TOP_RESTART } from '../../model/layoutConsts'
 import type { PathSegment } from '../../model/types'
-import { GameEngine, useEngineBridge, useSharedValuesMap } from '../../engine'
+import {
+  GameEngine,
+  useEngineBridge,
+  useGestureCompletionOrchestrator,
+  useSharedValuesMap
+} from '../../engine'
 import { useBlocks } from '../../hooks/useBlocks'
 import { GameCanvas } from '../GameCanvas'
 import { GameGestureViewEngine } from '../GameGestureView/GameGestureViewEngine'
@@ -66,16 +71,23 @@ export const GameRootView = memo((): React.JSX.Element => {
     }
   }, [screenWidth, screenHeight, insets])
 
-  const onCompleteEnd = useCallback(
+  const onComplete = useCallback(
     (updated?: PathSegment[][]) => {
-      engine.setActiveItem(undefined)
-      engine.onAnimationFinish()
-      if (updated) engine.onCompleteGesture(updated)
+      engine.onGestureComplete(updated)
     },
     [engine]
   )
 
-  useEngineBridge(engine, shared, { onCompleteEnd })
+  const onOverlayFadeOutComplete = useCallback(() => {
+    engine.signalOverlayFadeOutComplete()
+  }, [engine])
+
+  const orchestrator = useGestureCompletionOrchestrator({
+    onComplete,
+    onOverlayFadeOutComplete
+  })
+
+  useEngineBridge(engine, shared, { orchestrator })
 
   const handleTapOrRestart = useCallback(
     (x: number, y: number): boolean => {

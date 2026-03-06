@@ -9,12 +9,6 @@
 import type { GestureSlot, GestureSource, HasOpacity } from './types'
 import type { ReactionRule } from './reactionRules'
 
-/** @deprecated Use GestureSlot from types instead */
-export type SlotWithGesture = GestureSlot
-
-/** @deprecated Use GestureSource from types instead */
-export type GestureTranslateX = GestureSource
-
 /**
  * When the slot is "active", sync its translateX with the gesture offset.
  * Use for draggable items that follow the pan gesture.
