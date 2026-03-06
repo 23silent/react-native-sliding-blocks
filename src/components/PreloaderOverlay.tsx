@@ -1,9 +1,17 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming
+} from 'react-native-reanimated'
 
 import { LOADING_OVERLAY } from '../model/layoutConsts'
 
-const { BOX_WIDTH, BOX_HEIGHT, BAR_HEIGHT, BAR_INSET } = LOADING_OVERLAY
+const { BOX_WIDTH, BAR_HEIGHT, BAR_INSET } = LOADING_OVERLAY
+
+const TRACK_WIDTH = BOX_WIDTH - BAR_INSET * 2
+const FILL_ANIMATION_DURATION = 400
 
 type Props = {
   progress: number
@@ -11,17 +19,28 @@ type Props = {
 
 /**
  * RN-based preloader — renders instantly on first frame (no Skia/Canvas delay).
- * Fully opaque background for seamless feel.
+ * Progress bar animates smoothly so progress changes are clearly visible.
  */
 export function PreloaderOverlay({ progress }: Props): React.JSX.Element {
-  const fillWidth = Math.max(0, Math.min(1, progress)) * (BOX_WIDTH - BAR_INSET * 2)
+  const fillWidth = useSharedValue(0)
+
+  useEffect(() => {
+    const clamped = Math.max(0, Math.min(1, progress))
+    fillWidth.value = withTiming(clamped * TRACK_WIDTH, {
+      duration: FILL_ANIMATION_DURATION
+    })
+  }, [progress, fillWidth])
+
+  const fillStyle = useAnimatedStyle(() => ({
+    width: fillWidth.value
+  }))
 
   return (
     <View style={styles.backdrop}>
       <View style={styles.box}>
         <Text style={styles.title}>Loading...</Text>
         <View style={styles.barTrack}>
-          <View style={[styles.barFill, { width: fillWidth }]} />
+          <Animated.View style={[styles.barFill, fillStyle]} />
         </View>
       </View>
     </View>

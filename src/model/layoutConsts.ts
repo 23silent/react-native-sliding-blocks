@@ -48,9 +48,11 @@ export const GAME_OVER_OVERLAY = {
 export const LOADING_OVERLAY = {
   BOX_WIDTH: 260,
   BOX_HEIGHT: 80,
-  BAR_HEIGHT: 8,
+  BAR_HEIGHT: 10,
   BAR_RADIUS: 4,
   BAR_INSET: 16,
   /** Minimum time to show loading (ms) — avoids flash on fast loads */
-  MIN_DISPLAY_MS: 600
+  MIN_DISPLAY_MS: 600,
+  /** Extra time (ms) to keep preloader visible after game view is ready */
+  POST_LOAD_DELAY_MS: 700
 } as const
