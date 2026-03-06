@@ -19,12 +19,17 @@ import {
   CELL_SIZE,
   COLUMNS_COUNT,
   EXPLOSION_POOL_SIZE,
+  GAME_HEIGHT,
+  GAME_WIDTH,
   KEYS,
-  ROWS_COUNT
+  ROWS_COUNT,
+  TOTAL_ASSETS_IMAGE,
+  TOTAL_ASSETS_SKIA
 } from '../../model/consts'
 import {
   LOADING_OVERLAY,
   SCORE_BAR,
+  SKIA_BUTTON_RADIUS,
   TOP_PAUSE
 } from '../../model/layoutConsts'
 import { fonts } from '../../utils/fonts'
@@ -50,9 +55,6 @@ const cancelIdle =
     ? (id: number) => glob.clearIdleCallback!(id)
     : (id: number) => clearTimeout(id)
 
-const GAME_WIDTH = CELL_SIZE * COLUMNS_COUNT
-const GAME_HEIGHT = CELL_SIZE * ROWS_COUNT
-
 export type GameLayout = {
   contentTop: number
   gameAreaX: number
@@ -74,9 +76,6 @@ type GameCanvasProps = {
   onLoadProgress?: (progress: number) => void
   onLoadComplete?: () => void
 }
-
-const TOTAL_ASSETS_IMAGE = 7 * 4 + 1 // blocks (7 colors × 4 sizes) + bg
-const TOTAL_ASSETS_SKIA = 1 // bg only (blocks drawn with Skia primitives)
 
 function countLoadedAssets(
   block: BlockMap,
@@ -215,7 +214,7 @@ export const GameCanvas = memo(function GameCanvas({
           y={pauseTop}
           width={TOP_PAUSE.WIDTH}
           height={TOP_PAUSE.HEIGHT}
-          r={10}
+          r={SKIA_BUTTON_RADIUS}
           color="rgba(59,130,246,0.85)"
           label="Pause"
           labelX={pauseLeft + (TOP_PAUSE.WIDTH - 44) / 2}

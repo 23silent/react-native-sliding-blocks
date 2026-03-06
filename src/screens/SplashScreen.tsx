@@ -2,7 +2,7 @@ import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-const MENU_BG = 'rgba(15,23,42,0.98)'
+import { MENU_BG } from '../model/layoutConsts'
 
 export function SplashScreen(): React.JSX.Element {
   const insets = useSafeAreaInsets()

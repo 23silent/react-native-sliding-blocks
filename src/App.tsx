@@ -5,13 +5,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { CanvasErrorBoundary } from './components/CanvasErrorBoundary'
 import type { Route } from './navigation/types'
+import { SPLASH_DURATION_MS } from './model/animConsts'
 import { GameScreen } from './screens/GameScreen'
 import { HomeScreen } from './screens/HomeScreen'
 import { ScoreBoardScreen } from './screens/ScoreBoardScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { SplashScreen } from './screens/SplashScreen'
-
-const SPLASH_DURATION_MS = 1500
 
 function App(): React.JSX.Element {
   const [route, setRoute] = useState<Route>('splash')

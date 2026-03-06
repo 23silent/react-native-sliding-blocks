@@ -1,5 +1,6 @@
 export * from './types'
 export * from './consts'
+export * from './visualConsts'
 export { ProcessData } from './ProcessData'
 export { fit } from './fit'
 export { remove } from './remove'

@@ -1,8 +1,6 @@
-import { CELL_SIZE, COLUMNS_COUNT, ROWS_COUNT } from '../model/consts'
+import { GAME_HEIGHT, GAME_WIDTH } from '../model/consts'
 import { GAME_OVER_OVERLAY } from '../model/layoutConsts'
 
-const GAME_WIDTH = CELL_SIZE * COLUMNS_COUNT
-const GAME_HEIGHT = CELL_SIZE * ROWS_COUNT
 const { BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_TOP_OFFSET } = GAME_OVER_OVERLAY
 
 export const GAME_OVER_RESTART_BOUNDS = {

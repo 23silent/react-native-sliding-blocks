@@ -3,7 +3,10 @@
  * All values are plain data for worklet compatibility.
  */
 
-const PARTICLE_COUNT = 18
+import { EXPLOSION_PRESETS } from '../../model/visualConsts'
+
+const { PARTICLE_COUNT, TRAJECTORY_PRESET_COUNT, SHAPE_PRESET_COUNT } =
+  EXPLOSION_PRESETS
 
 /** Seeded pseudo-random for deterministic presets */
 function seeded(seed: number): () => number {
@@ -26,9 +29,6 @@ export type ShapeParticle = {
   sizeMult: number
   rotation: number
 }
-
-const TRAJECTORY_PRESET_COUNT = 8
-const SHAPE_PRESET_COUNT = 8
 
 function buildTrajectoryPreset(seedBase: number): TrajectoryParticle[] {
   const r = seeded(seedBase)

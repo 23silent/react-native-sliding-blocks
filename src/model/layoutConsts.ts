@@ -54,5 +54,26 @@ export const LOADING_OVERLAY = {
   /** Minimum time to show loading (ms) — avoids flash on fast loads */
   MIN_DISPLAY_MS: 600,
   /** Extra time (ms) to keep preloader visible after game view is ready */
-  POST_LOAD_DELAY_MS: 700
+  POST_LOAD_DELAY_MS: 700,
+  /** Duration (ms) for progress bar fill animation */
+  FILL_ANIMATION_DURATION_MS: 400
 } as const
+
+/** Game root layout */
+export const GAME_ROOT = {
+  ACTIONS_BAR_HEIGHT: 70,
+  DIVIDER_HEIGHT: 12
+} as const
+
+/** Home screen menu buttons */
+export const HOME_SCREEN = {
+  BUTTON_WIDTH: 220,
+  BUTTON_HEIGHT: 52,
+  BUTTON_GAP: 16
+} as const
+
+/** Shared background for menu/splash screens */
+export const MENU_BG = 'rgba(15,23,42,0.98)' as const
+
+/** Default corner radius for Skia buttons */
+export const SKIA_BUTTON_RADIUS = 10

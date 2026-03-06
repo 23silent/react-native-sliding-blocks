@@ -1,8 +1,6 @@
-import { CELL_SIZE, COLUMNS_COUNT, ROWS_COUNT } from '../model/consts'
+import { GAME_HEIGHT, GAME_WIDTH } from '../model/consts'
 import { PAUSE_OVERLAY } from '../model/layoutConsts'
 
-const GAME_WIDTH = CELL_SIZE * COLUMNS_COUNT
-const GAME_HEIGHT = CELL_SIZE * ROWS_COUNT
 const { BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_GAP, FIRST_BUTTON_TOP } =
   PAUSE_OVERLAY
 const BOX_LEFT = (GAME_WIDTH - PAUSE_OVERLAY.BOX_WIDTH) / 2

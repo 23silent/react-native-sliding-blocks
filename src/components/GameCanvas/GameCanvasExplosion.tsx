@@ -4,18 +4,15 @@ import { useDerivedValue } from 'react-native-reanimated'
 
 import type { ExplosionPoolSlotSharedValues } from '../../engine/useSharedValuesMap'
 
+import { EXPLOSION } from '../../model/visualConsts'
 import {
-  EXPLOSION_PRESET_COUNT,
   PARTICLE_COUNT,
   SHAPE_PRESETS,
   TRAJECTORY_PRESETS
 } from './explosionPresets'
 
-const EXPLOSION_RADIUS = 120
-const BASE_PARTICLE_SIZE = 18
-const RISE_HEIGHT = 55
-const FALL_DISTANCE = 200
-const PICTURE_SIZE = 450
+const { RADIUS, BASE_PARTICLE_SIZE, RISE_HEIGHT, FALL_DISTANCE, PICTURE_SIZE } =
+  EXPLOSION
 const CENTER = PICTURE_SIZE / 2
 
 type Props = {
@@ -53,7 +50,7 @@ export const GameCanvasExplosion = memo(function GameCanvasExplosion({
         const shape = shapePreset[i] ?? shapePreset[0]
 
         const easedProgress = 1 - Math.pow(1 - progress, traj.speedCurve)
-        const distance = easedProgress * EXPLOSION_RADIUS * traj.distMult
+        const distance = easedProgress * RADIUS * traj.distMult
         const cx = CENTER + Math.cos(traj.angle) * distance
         const baseCy = CENTER + Math.sin(traj.angle) * distance
         const rise = -Math.sin(progress * Math.PI) * RISE_HEIGHT * traj.arcMult

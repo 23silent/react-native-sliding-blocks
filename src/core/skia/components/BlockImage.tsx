@@ -11,6 +11,7 @@ import { useDerivedValue } from 'react-native-reanimated'
 
 import { CELL_SIZE } from '../../../model/consts'
 import type { BlockMap } from '../../../model/types'
+import { BLOCK } from '../../../model/visualConsts'
 
 export type BlockImageSlot = {
   translateX: SharedValue<number>
@@ -27,20 +28,6 @@ type Props = {
   /** When true, draw blocks with Skia primitives instead of PNG assets. */
   useSkiaDrawing?: boolean
 }
-
-const BLOCK_RADIUS = 12
-const BLOCK_BORDER_WIDTH = 1
-/** Border for glass-like blocks (slightly darker than before) */
-const BLOCK_BORDER_COLOR = 'rgba(180,185,195,0.75)'
-/** Frosted glass overlay: subtle white highlight at top */
-const FROST_HIGHLIGHT_COLOR = 'rgba(255,255,255,0.05)'
-const FROST_HIGHLIGHT_HEIGHT_RATIO = 0.25
-/** Super block gradient colors (purple → gold) */
-const SUPER_GRADIENT_COLORS: [number, number, number][] = [
-  [120, 0, 255],
-  [255, 180, 0]
-]
-const SUPER_GRADIENT_STEPS = 20
 
 /**
  * Renders a block at slot position.
@@ -76,7 +63,7 @@ export function BlockImage({
     const color = slot.color.value
     const isSuper = color === '#000' || color === '#000000'
     const rect = Skia.XYWHRect(0, 0, w, height)
-    const rrect = Skia.RRectXY(rect, BLOCK_RADIUS, BLOCK_RADIUS)
+    const rrect = Skia.RRectXY(rect, BLOCK.RADIUS, BLOCK.RADIUS)
     const canvas = recorder.beginRecording(Skia.XYWHRect(0, 0, w, height))
 
     if (isSuper) {
@@ -86,10 +73,10 @@ export function BlockImage({
       path.addRRect(rrect)
       canvas.save()
       canvas.clipPath(path, 1, true) // 1 = kIntersect (keep inside path), 0 = kDifference
-      const [c1, c2] = SUPER_GRADIENT_COLORS
-      const stepH = height / SUPER_GRADIENT_STEPS
-      for (let i = 0; i < SUPER_GRADIENT_STEPS; i++) {
-        const t = i / (SUPER_GRADIENT_STEPS - 1)
+      const [c1, c2] = BLOCK.SUPER_GRADIENT_COLORS
+      const stepH = height / BLOCK.SUPER_GRADIENT_STEPS
+      for (let i = 0; i < BLOCK.SUPER_GRADIENT_STEPS; i++) {
+        const t = i / (BLOCK.SUPER_GRADIENT_STEPS - 1)
         const r = Math.round(c1[0] + (c2[0] - c1[0]) * t)
         const g = Math.round(c1[1] + (c2[1] - c1[1]) * t)
         const b = Math.round(c1[2] + (c2[2] - c1[2]) * t)
@@ -106,9 +93,9 @@ export function BlockImage({
     }
 
     // Border
-    strokePaint.setColor(Skia.Color(BLOCK_BORDER_COLOR))
+    strokePaint.setColor(Skia.Color(BLOCK.BORDER_COLOR))
     strokePaint.setAlphaf(opacity)
-    strokePaint.setStrokeWidth(BLOCK_BORDER_WIDTH)
+    strokePaint.setStrokeWidth(BLOCK.BORDER_WIDTH)
     strokePaint.setStyle(1) // 1 = Stroke in Skia
     canvas.drawRRect(rrect, strokePaint)
 

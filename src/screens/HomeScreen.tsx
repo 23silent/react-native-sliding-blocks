@@ -8,22 +8,24 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { HOME_SCREEN, MENU_BG } from '../model/layoutConsts'
 import type { Route } from '../navigation/types'
 
 type Props = {
   onNavigate: (route: Route) => void
 }
 
-const BUTTON_WIDTH = 220
-const BUTTON_HEIGHT = 52
-const BUTTON_GAP = 16
-
 export function HomeScreen({ onNavigate }: Props): React.JSX.Element {
   const { height } = useWindowDimensions()
   const insets = useSafeAreaInsets()
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom }
+      ]}
+    >
       <Text style={styles.title}>Sliding Blocks</Text>
       <View style={[styles.buttons, { marginTop: height * 0.08 }]}>
         <Pressable
@@ -64,7 +66,7 @@ export function HomeScreen({ onNavigate }: Props): React.JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(15,23,42,0.98)',
+    backgroundColor: MENU_BG,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24
@@ -77,11 +79,11 @@ const styles = StyleSheet.create({
   },
   buttons: {
     alignItems: 'center',
-    gap: BUTTON_GAP
+    gap: HOME_SCREEN.BUTTON_GAP
   },
   button: {
-    width: BUTTON_WIDTH,
-    height: BUTTON_HEIGHT,
+    width: HOME_SCREEN.BUTTON_WIDTH,
+    height: HOME_SCREEN.BUTTON_HEIGHT,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center'

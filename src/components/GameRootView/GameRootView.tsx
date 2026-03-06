@@ -4,12 +4,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { withTiming } from 'react-native-reanimated'
 
 import {
-  CELL_SIZE,
-  COLUMNS_COUNT,
-  PADDING,
-  ROWS_COUNT
+  GAME_HEIGHT,
+  GAME_WIDTH,
+  PADDING
 } from '../../model/consts'
-import { TOP_PAUSE } from '../../model/layoutConsts'
+import { GAME_ROOT, TOP_PAUSE } from '../../model/layoutConsts'
 import type { PathSegment } from '../../model/types'
 import {
   GameEngine,
@@ -23,10 +22,7 @@ import { GameGestureViewEngine } from '../GameGestureView/GameGestureViewEngine'
 import { hitTestRestart as hitTestGameOverRestart } from '../../utils/gameOverHitTest'
 import { hitTestPauseOverlay } from '../../utils/pauseOverlayHitTest'
 
-const ACTIONS_BAR_HEIGHT = 70
-const DIVIDER_HEIGHT = 12
-const GAME_WIDTH = CELL_SIZE * COLUMNS_COUNT
-const GAME_HEIGHT = CELL_SIZE * ROWS_COUNT
+const { ACTIONS_BAR_HEIGHT, DIVIDER_HEIGHT } = GAME_ROOT
 
 const getTopPauseBounds = (layout: {
   contentTop: number

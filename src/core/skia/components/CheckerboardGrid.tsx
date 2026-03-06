@@ -2,6 +2,8 @@ import { Group, Picture, Skia } from '@shopify/react-native-skia'
 import React, { memo, useMemo } from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
+import { CHECKERBOARD } from '../../../model/visualConsts'
+
 type Props = {
   rows: number
   cols: number
@@ -13,10 +15,6 @@ type Props = {
   lightOpacity?: number
 }
 
-const DEFAULT_BASE_COLOR = 'rgba(0,0,0,1)'
-const DEFAULT_DARK_OPACITY = 0.2
-const DEFAULT_LIGHT_OPACITY = 0.3
-
 /**
  * Renders a checkerboard grid pattern as a single Skia Picture.
  * Drawing happens on the UI thread in a worklet - no 80 React nodes, no JS-thread render cost.
@@ -25,9 +23,9 @@ export const CheckerboardGrid = memo(function CheckerboardGrid({
   rows,
   cols,
   cellSize,
-  baseColor = DEFAULT_BASE_COLOR,
-  darkOpacity = DEFAULT_DARK_OPACITY,
-  lightOpacity = DEFAULT_LIGHT_OPACITY
+  baseColor = CHECKERBOARD.DEFAULT_BASE_COLOR,
+  darkOpacity = CHECKERBOARD.DEFAULT_DARK_OPACITY,
+  lightOpacity = CHECKERBOARD.DEFAULT_LIGHT_OPACITY
 }: Props): React.JSX.Element {
   const paint = useMemo(() => Skia.Paint(), [])
   const recorder = useMemo(() => Skia.PictureRecorder(), [])

@@ -8,10 +8,15 @@ import Animated, {
 
 import { LOADING_OVERLAY } from '../model/layoutConsts'
 
-const { BOX_WIDTH, BAR_HEIGHT, BAR_INSET } = LOADING_OVERLAY
+const {
+  BOX_WIDTH,
+  BOX_HEIGHT,
+  BAR_HEIGHT,
+  BAR_INSET,
+  FILL_ANIMATION_DURATION_MS
+} = LOADING_OVERLAY
 
 const TRACK_WIDTH = BOX_WIDTH - BAR_INSET * 2
-const FILL_ANIMATION_DURATION = 400
 
 type Props = {
   progress: number
@@ -27,7 +32,7 @@ export function PreloaderOverlay({ progress }: Props): React.JSX.Element {
   useEffect(() => {
     const clamped = Math.max(0, Math.min(1, progress))
     fillWidth.value = withTiming(clamped * TRACK_WIDTH, {
-      duration: FILL_ANIMATION_DURATION
+      duration: FILL_ANIMATION_DURATION_MS
     })
   }, [progress, fillWidth])
 
