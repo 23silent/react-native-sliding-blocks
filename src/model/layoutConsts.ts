@@ -11,6 +11,16 @@ export const TOP_RESTART = {
   HEIGHT: 40
 } as const
 
+/** Top actions bar Menu button (return to home) */
+export const TOP_MENU = {
+  RIGHT_OFFSET: 10,
+  WIDTH: 64,
+  TOP_OFFSET: 8,
+  HEIGHT: 40,
+  /** Gap between stats pills and Menu button */
+  STATS_GAP: 16
+} as const
+
 /** Score bar layout — zones to avoid overlap */
 export const SCORE_BAR = {
   HEIGHT: 56,

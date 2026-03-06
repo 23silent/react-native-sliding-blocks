@@ -8,7 +8,7 @@ import {
   PADDING,
   ROWS_COUNT
 } from '../../model/consts'
-import { TOP_RESTART } from '../../model/layoutConsts'
+import { TOP_MENU, TOP_RESTART } from '../../model/layoutConsts'
 import type { PathSegment } from '../../model/types'
 import {
   GameEngine,
@@ -39,13 +39,54 @@ const getTopRestartBounds = (layout: {
 const hitTestTopRestart = (
   x: number,
   y: number,
-  layout: { contentTop: number; actionsBarLeft: number }
+  layout: { contentTop: number; actionsBarLeft: number; actionsBarWidth: number }
 ): boolean => {
   const b = getTopRestartBounds(layout)
   return x >= b.left && x <= b.right && y >= b.top && y <= b.bottom
 }
 
-export const GameRootView = memo((): React.JSX.Element => {
+const getTopMenuBounds = (layout: {
+  contentTop: number
+  actionsBarLeft: number
+  actionsBarWidth: number
+}) => {
+  const left =
+    layout.actionsBarLeft +
+    layout.actionsBarWidth -
+    TOP_MENU.RIGHT_OFFSET -
+    TOP_MENU.WIDTH
+  return {
+    left,
+    right: left + TOP_MENU.WIDTH,
+    top: layout.contentTop + TOP_MENU.TOP_OFFSET,
+    bottom: layout.contentTop + TOP_MENU.TOP_OFFSET + TOP_MENU.HEIGHT
+  }
+}
+
+const hitTestTopMenu = (
+  x: number,
+  y: number,
+  layout: {
+    contentTop: number
+    actionsBarLeft: number
+    actionsBarWidth: number
+  }
+): boolean => {
+  const b = getTopMenuBounds(layout)
+  return x >= b.left && x <= b.right && y >= b.top && y <= b.bottom
+}
+
+type GameRootViewProps = {
+  onMenuPress?: () => void
+  onLoadProgress?: (progress: number) => void
+  onLoadComplete?: () => void
+}
+
+export const GameRootView = memo(function GameRootView({
+  onMenuPress,
+  onLoadProgress,
+  onLoadComplete
+}: GameRootViewProps = {}): React.JSX.Element {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions()
   const insets = useSafeAreaInsets()
 
@@ -91,6 +132,10 @@ export const GameRootView = memo((): React.JSX.Element => {
 
   const handleTapOrRestart = useCallback(
     (x: number, y: number): boolean => {
+      if (onMenuPress && hitTestTopMenu(x, y, layout)) {
+        onMenuPress()
+        return true
+      }
       if (hitTestTopRestart(x, y, layout)) {
         engine.restart()
         return true
@@ -105,7 +150,7 @@ export const GameRootView = memo((): React.JSX.Element => {
       }
       return false
     },
-    [engine, layout]
+    [engine, layout, onMenuPress]
   )
 
   return (
@@ -121,6 +166,9 @@ export const GameRootView = memo((): React.JSX.Element => {
         block={block}
         screenWidth={screenWidth}
         screenHeight={screenHeight}
+        showMenuButton={!!onMenuPress}
+        onLoadProgress={onLoadProgress}
+        onLoadComplete={onLoadComplete}
       />
     </GameGestureViewEngine>
   )

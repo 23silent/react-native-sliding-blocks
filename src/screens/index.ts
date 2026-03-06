@@ -1,0 +1,4 @@
+export { GameScreen } from './GameScreen'
+export { HomeScreen } from './HomeScreen'
+export { ScoreBoardScreen } from './ScoreBoardScreen'
+export { SettingsScreen } from './SettingsScreen'
