@@ -190,7 +190,8 @@ export function useEngineBridge(
               )
             )
           } else if (!wasRemoving && isRemoving) {
-            const removeItem = () => engine.removeItem(key)
+            /* Don't wait for remove animation - pipeline advances immediately */
+            engine.removeItem(key)
             const cellCount = Math.max(
               1,
               Math.round(slot.width.value / CELL_SIZE)
@@ -211,17 +212,7 @@ export function useEngineBridge(
                 duration: ANIM.REMOVE_FADE
               })
             }
-            pending += 1
-            slot.opacity.value = withTiming(
-              0,
-              { duration: ANIM.REMOVE_FADE },
-              finished => {
-                if (finished) {
-                  scheduleOnRN(removeItem)
-                  scheduleOnRN(onComplete)
-                }
-              }
-            )
+            slot.opacity.value = withTiming(0, { duration: ANIM.REMOVE_FADE })
           } else if (!st.opacityControlledByAnimation) {
             slot.opacity.value = st.opacityValue
           }
