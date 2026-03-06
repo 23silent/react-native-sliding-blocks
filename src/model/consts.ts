@@ -7,8 +7,8 @@ export const PADDING = 30
 export const KEYS_SIZE = 48
 export const KEYS = Array.from({ length: KEYS_SIZE }, (_, i) => String(i))
 
-/** Pool size for concurrent explosion animations (limits Skia work per frame) */
-export const EXPLOSION_POOL_SIZE = 6
+/** Pool size for concurrent explosion animations. Multi-cell blocks use one slot per cell (e.g. 4-cell = 4 slots). */
+export const EXPLOSION_POOL_SIZE = 16
 
 /**
  * Computed once at module load. Does not update on rotation or dimension change.

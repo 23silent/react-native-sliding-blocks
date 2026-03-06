@@ -191,17 +191,26 @@ export function useEngineBridge(
             )
           } else if (!wasRemoving && isRemoving) {
             const removeItem = () => engine.removeItem(key)
-            const poolIndex = nextPoolIndexRef.current % EXPLOSION_POOL_SIZE
-            nextPoolIndexRef.current += 1
-            const poolSlot = shared.explosionPool[poolIndex]
-            poolSlot.centerX.value =
-              slot.translateX.value + slot.width.value / 2
-            poolSlot.centerY.value = slot.translateY.value + CELL_SIZE / 2
-            poolSlot.color.value = slot.color.value
-            poolSlot.progress.value = 0
-            poolSlot.progress.value = withTiming(1, {
-              duration: ANIM.REMOVE_FADE
-            })
+            const cellCount = Math.max(
+              1,
+              Math.round(slot.width.value / CELL_SIZE)
+            )
+            const colorVal = slot.color.value
+            const baseX = slot.translateX.value
+            const baseY = slot.translateY.value
+
+            for (let c = 0; c < cellCount; c++) {
+              const poolIndex = nextPoolIndexRef.current % EXPLOSION_POOL_SIZE
+              nextPoolIndexRef.current += 1
+              const poolSlot = shared.explosionPool[poolIndex]
+              poolSlot.centerX.value = baseX + (c + 0.5) * CELL_SIZE
+              poolSlot.centerY.value = baseY + CELL_SIZE / 2
+              poolSlot.color.value = colorVal
+              poolSlot.progress.value = 0
+              poolSlot.progress.value = withTiming(1, {
+                duration: ANIM.REMOVE_FADE
+              })
+            }
             pending += 1
             slot.opacity.value = withTiming(
               0,

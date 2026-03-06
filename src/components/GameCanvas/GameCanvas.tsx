@@ -310,7 +310,7 @@ export const GameCanvas = memo(function GameCanvas({
           />
         ))}
         {shared.explosionPool.map((slot, i) => (
-          <GameCanvasExplosion key={i} slot={slot} />
+          <GameCanvasExplosion key={i} slot={slot} slotIndex={i} />
         ))}
         {/* Game Over Overlay */}
         <GameOverOverlay

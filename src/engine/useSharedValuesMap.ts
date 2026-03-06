@@ -99,44 +99,15 @@ export function useSharedValuesMap(): SharedValuesMap {
     {} as Record<string, ItemSlotSharedValues>
   )
 
-  const explosionPool: ExplosionPoolSlotSharedValues[] = [
-    {
+  const explosionPool: ExplosionPoolSlotSharedValues[] = Array.from(
+    { length: EXPLOSION_POOL_SIZE },
+    () => ({
       progress: useSharedValue(0),
       centerX: useSharedValue(-1000),
       centerY: useSharedValue(-1000),
       color: useSharedValue('#fff')
-    },
-    {
-      progress: useSharedValue(0),
-      centerX: useSharedValue(-1000),
-      centerY: useSharedValue(-1000),
-      color: useSharedValue('#fff')
-    },
-    {
-      progress: useSharedValue(0),
-      centerX: useSharedValue(-1000),
-      centerY: useSharedValue(-1000),
-      color: useSharedValue('#fff')
-    },
-    {
-      progress: useSharedValue(0),
-      centerX: useSharedValue(-1000),
-      centerY: useSharedValue(-1000),
-      color: useSharedValue('#fff')
-    },
-    {
-      progress: useSharedValue(0),
-      centerX: useSharedValue(-1000),
-      centerY: useSharedValue(-1000),
-      color: useSharedValue('#fff')
-    },
-    {
-      progress: useSharedValue(0),
-      centerX: useSharedValue(-1000),
-      centerY: useSharedValue(-1000),
-      color: useSharedValue('#fff')
-    }
-  ]
+    })
+  )
 
   return {
     score,
