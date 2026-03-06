@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { BackHandler } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -9,14 +9,23 @@ import { GameScreen } from './screens/GameScreen'
 import { HomeScreen } from './screens/HomeScreen'
 import { ScoreBoardScreen } from './screens/ScoreBoardScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
+import { SplashScreen } from './screens/SplashScreen'
+
+const SPLASH_DURATION_MS = 1500
 
 function App(): React.JSX.Element {
-  const [route, setRoute] = useState<Route>('home')
+  const [route, setRoute] = useState<Route>('splash')
 
   const goHome = useCallback(() => setRoute('home'), [])
 
+  useEffect(() => {
+    if (route !== 'splash') return
+    const t = setTimeout(() => setRoute('home'), SPLASH_DURATION_MS)
+    return () => clearTimeout(t)
+  }, [route])
+
   React.useEffect(() => {
-    if (route === 'home') return
+    if (route === 'home' || route === 'splash') return
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       setRoute('home')
       return true
@@ -28,6 +37,7 @@ function App(): React.JSX.Element {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <CanvasErrorBoundary>
+          {route === 'splash' && <SplashScreen />}
           {route === 'home' && (
             <HomeScreen onNavigate={setRoute} />
           )}
