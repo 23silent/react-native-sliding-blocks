@@ -1,16 +1,18 @@
 # Core Concepts (Reusable Across Games)
 
-This folder contains patterns you can reuse when building new React Native games. The goal: **smooth 60fps, no React commits during gameplay, pre-rendered UI**.
+Patterns for building high-performance React Native games with this library. Goal: **smooth 60fps, no React commits during gameplay, pre-rendered UI**.
+
+This doc is for **contributors** and for building new games that reuse these patterns (e.g. by extending or forking the library). The binding/pipeline utilities are internal modules, not exported from the package.
 
 ---
 
-## Architecture (slidingBlocks layout)
+## Architecture
 
 | Layer | Path | Responsibility |
 |-------|------|----------------|
-| **Engine** | `slidingBlocks/engine/` | Pure game logic, RxJS, no React or Reanimated |
-| **Bridge** | `slidingBlocks/bridge/` | RxJS → SharedValues binding; the only layer that knows RxJS and Reanimated |
-| **UI** | `slidingBlocks/ui/` | React components, Skia, SharedValues only (no RxJS) |
+| **Engine** | `engine/` | Pure game logic, RxJS, no React or Reanimated |
+| **Bridge** | `bridge/` | RxJS → SharedValues binding; the only layer that knows RxJS and Reanimated |
+| **UI** | `ui/` | React components, Skia, SharedValues only (no RxJS) |
 
 Dependency flow: `engine ← bridge ← ui`. The UI imports engine types and bridge hooks.
 
@@ -68,7 +70,7 @@ Sound and other side effects are never invoked by the engine. The bridge calls `
 - Uses `BinderHook` + `DisposeBag` to subscribe and cleanup
 - All RxJS → SharedValue writes happen there
 
-**Reuse:** `BinderHook` and `useStreamBridge` from `engine/core/binding`. Your game's bridge hook calls them with game-specific mappings.
+**Reuse:** `BinderHook` and `DisposeBag` from `engine/core/binding`; `useStreamBridge` from `bridge/`. Your game's bridge hook (e.g. `useEngineBridge`) calls them with game-specific mappings.
 
 ---
 
@@ -102,12 +104,12 @@ Sound and other side effects are never invoked by the engine. The bridge calls `
 1. **Model** — Types, game rules, process loop (fit/remove/add or equivalent)
 2. **ViewModels** — RxJS streams for state; GestureCoordinator for input
 3. **Engine** — Facade that composes ViewModels, exposes streams + methods
-4. **SharedValuesMap** — Hook that creates all SharedValues (score, items, overlays, etc.)
+4. **useSharedValuesMap** — Hook (in `bridge/`) that creates all SharedValues (score, items, overlays, etc.)
 5. **Bridge** — Hook that uses `BinderHook` to subscribe engine streams → SharedValues
 6. **Canvas** — Pre-rendered Skia nodes, all driven by SharedValues
 7. **GestureView** — Gesture handling with `scheduleOnRN` to call engine methods (no object capture in worklets)
 
-Use `engine/core/binding` for BinderHook, DisposeBag, useStreamBridge. Keep game-specific logic in your game module.
+Use `engine/core/binding` for BinderHook and DisposeBag; `bridge/useStreamBridge` for the subscription helper. Keep game-specific logic in your game module.
 
 ---
 
@@ -116,9 +118,10 @@ Use `engine/core/binding` for BinderHook, DisposeBag, useStreamBridge. Keep game
 **Idea:** Define Reanimated reactions (watch SharedValues → apply side effects) in a declarative, reusable way.
 
 **How:**
-- `useReactionRule(rule)` — runs one `{ watch, apply }` rule
-- **Presets:** `activeGestureSync`, etc. (see `ui/skia`)
-- Slot interfaces (GestureSlot, HasOpacity, etc.) so presets work with your components
+- `useReactionRule(rule)` / `useReactionRules(rules)` — run one or more `{ watch, apply }` rules
+- **Components:** `ReactiveSlot` wraps children with a reaction; `withReaction` is the HOC variant
+- **Presets:** `activeGestureSync` (sync translateX with gesture), `fadeWhenInactive` (dim inactive slots), `syncValue` (copy one SharedValue to another)
+- **Slot interfaces** (`GestureSlot`, `HasOpacity`, `HasTranslateX`, etc. in `ui/skia/types`) — presets expect these so they work with any component that implements them
 
 **Reuse:** Use presets or define custom rules. Rule functions must be worklets (`'worklet'` as first statement).
 
@@ -197,8 +200,10 @@ The view calls a single method: `engine.onGestureComplete(updated)`. The engine 
 
 ### Reuse
 
+`createPipeline` lives in `engine/core/pipeline` (internal; not exported from the package). When extending this library:
+
 ```ts
-import { createPipeline } from 'slidingBlocks/engine/core/pipeline'
+import { createPipeline } from '../engine/core/pipeline'
 
 const myPipeline = createPipeline<MyContext>([
   (ctx, next) => { /* side effect */ return next() },

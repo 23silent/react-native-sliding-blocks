@@ -8,7 +8,7 @@ import {
   PreloaderOverlay,
   scheduleIdle,
   cancelIdle
-} from '../../slidingBlocks'
+} from 'react-native-sliding-blocks'
 import { SLIDING_BLOCKS_ASSETS } from '../assets/slidingBlocksAssets'
 import { POST_LOAD_DELAY_MS, SLIDING_BLOCKS_THEME } from '../theme'
 import { useSettings } from '../hooks/useSettings'

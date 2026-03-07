@@ -1,0 +1,12 @@
+{
+  "extends": "@react-native/typescript-config",
+  "compilerOptions": {
+    "types": ["jest"],
+    "baseUrl": ".",
+    "paths": {
+      "react-native-sliding-blocks": ["../src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "android", "ios", "**/node_modules", "**/Pods"],
+  "include": ["./src/**/*", "**/*.ts", "**/*.tsx"]
+}

@@ -1,0 +1,62 @@
+# Example app — paths relative to example/
+
+# Env & secrets
+.env
+.env.local
+.env.*.local
+
+# Xcode / iOS
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+**/.xcode.env.local
+
+# Android / IntelliJ
+build/
+.idea
+.gradle
+local.properties
+*.iml
+*.hprof
+.cxx/
+*.keystore
+!debug.keystore
+*.jks
+.kotlin/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+android/captures/
+
+# CocoaPods
+**/Pods/
+
+# React Native
+*.jsbundle
+.metro-health-check*
+.eslintcache
+
+# Expo (if used)
+.expo/
+
+# Logs & temp
+*.log
+*.tmp
+.temp/
+
+vendor/
+.bundle/

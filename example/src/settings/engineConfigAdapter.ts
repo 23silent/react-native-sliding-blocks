@@ -1,4 +1,4 @@
-import type { EngineConfig } from '../../slidingBlocks'
+import type { EngineConfig } from 'react-native-sliding-blocks'
 import type { GameConfig } from './gameConfig'
 
 /** Converts UI GameConfig to SDK EngineConfig. */

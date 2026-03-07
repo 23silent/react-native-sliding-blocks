@@ -1,153 +1,279 @@
-# Sliding Blocks Puzzle (React Native)
+# react-native-sliding-blocks
 
-A **high-performance** puzzle game built with React Native and TypeScript—slide blocks, fill rows, clear them for points, and watch everything cascade down. Runs great on both iOS and Android with smooth 60fps thanks to Skia, Reanimated, and worklets.
+A **React Native game library** for building high-performance sliding block puzzles. Slide colored segments on a grid, fill rows to clear them, and watch blocks cascade. Built with Skia, Reanimated, and RxJS—60fps on iOS and Android.
 
-React Native is rarely the first tool that comes to mind for game development, but that's precisely what made this an interesting challenge. This project is an attempt to bridge the gap between the declarative UI patterns of React and the performance demands of real-time interaction. I hope it provides a helpful reference for others navigating the same intersection—proving that with the right combination of tools (Skia, Reanimated, and a solid state architecture), you can build experiences that feel far more native than the tech stack might suggest.
+**This is a library package**, not a standalone app. Install it in your React Native project and integrate the game with your own UI, assets, and logic.
 
-## About the App
+---
 
-**Sliding Blocks** is a match-style puzzle where you slide colorful segments around a grid. Fill a row completely and it clears—score points, watch blocks fall with gravity, and new rows keep coming from the top. Simple to pick up, satisfying to master.
+## Installation
 
-### Game Mechanics
+```bash
+npm install react-native-sliding-blocks
+# or
+yarn add react-native-sliding-blocks
+```
 
-- **Grid** — 8 columns × 10 rows of cells (configurable)
-- **Blocks** — Colored segments of varying lengths (1–4 cells). Drag them left or right to reposition.
-- **Clearing** — Fill a row completely to clear it. Segments disappear and blocks above drop.
-- **Super segments** — Rare black segments that, when cleared, also wipe overlapping blocks in adjacent rows. Handy for chain combos.
-- **Score & multiplier** — Animated display so you can track your progress as you go.
-- **Restart** — Fresh start whenever you need one.
+### Peer Dependencies
 
-### Architecture
-
-The app uses **MVVM** with RxJS and Reanimated. ViewModels hold game logic; Views render Skia Canvas nodes driven by SharedValues. A single **Engine** facade composes ViewModels and exposes a React-agnostic API. See [slidingBlocks/CONCEPTS.md](slidingBlocks/CONCEPTS.md) for the full architectural guide.
-
-## Stack
-
-| Layer | Technology |
-|-------|------------|
-| **Framework** | React Native 0.84 |
-| **Language** | TypeScript 5.8 |
-| **React** | React 19.2 |
-| **Graphics** | Skia (via `@shopify/react-native-skia`) |
-| **Animations** | React Native Reanimated 4.x |
-| **Gestures** | React Native Gesture Handler |
-| **State / Streams** | RxJS 7.x |
-| **Platforms** | iOS, Android |
-
-**Requirements**: Node.js ≥ 22.11.0 (you'll need this before running the app)
-
-## SlidingBlocks Module
-
-The game lives in the **`slidingBlocks/`** folder—a self-contained module with no bundled assets or side effects. The host app provides everything:
-
-| Responsibility | Host provides |
-|----------------|---------------|
-| **Config** | Grid size, layout, settings |
-| **Assets** | Block images, background image (optional; fallbacks: solid color bg, Skia-drawn blocks) |
-| **Sounds** | Via callbacks: `onRemovingStart` (row clear), `onFitComplete` with `{ hadActualFit }` (slide) |
-| **Persistence** | Score, high score, settings via callbacks |
-
-### APIs
-
-- **Declarative**: `<SlidingBlocks config={...} callbacks={...} assets={...} />` — all-in-one component
-- **Composable**: `useSlidingBlocks(props)` → `{ Root, ScoreBar, GameArea, ref }` — build custom layouts
-- **Low-level**: `GameRootView` — minimal wrapper when you need full control
-
-## Architectural Concepts
-
-The architecture is built around a few core principles:
-
-- **No React commits during gameplay** — Game state is held in RxJS streams and Reanimated SharedValues. The bridge (`useEngineBridge`) subscribes to RxJS and writes into SharedValues. React components never call `setState` for game logic.
-
-- **Pre-rendered UI** — The Skia Canvas declares all nodes upfront. Visibility and position are driven purely by SharedValues. No reconciliation from game state.
-
-- **Single binding point** — One `useEngineBridge` hook wires all engine streams to SharedValues.
-
-- **React-agnostic engine** — `GameEngine` and its ViewModels have no React or Reanimated imports. They can be unit-tested without a renderer.
-
-- **Host owns side effects** — Sound, persistence, and analytics are injected via callbacks. SlidingBlocks knows nothing about platforms or external services.
-
-## Performance & Technical Approach
-
-- **Skia rendering** — Drawing happens on the native thread.
-- **Reanimated + Worklets** — Animations and gesture feedback run on the UI thread.
-- **Reactive state** — RxJS streams drive game logic; SharedValues drive the UI.
-- **Batched processing** — Batched tasks and binary search keep per-frame work light.
-
-## Packages
-
-### Core Dependencies
+Install these in your app (they are **peer dependencies**):
 
 | Package | Purpose |
 |---------|---------|
-| `react` / `react-native` | UI framework & native bridge |
-| `@shopify/react-native-skia` | Skia-based 2D graphics & canvas |
-| `react-native-reanimated` | High-performance animations |
-| `react-native-gesture-handler` | Touch and gesture handling |
-| `react-native-worklets` | Run JS on UI thread |
-| `rxjs` | Reactive streams for game state |
+| `react` | UI framework |
+| `react-native` | Mobile runtime |
+| `@shopify/react-native-skia` | 2D graphics & canvas |
+| `react-native-reanimated` | Animations |
+| `react-native-gesture-handler` | Touch and gestures |
+| `react-native-worklets` | UI thread worklets |
+| `rxjs` | Reactive streams |
 | `react-native-safe-area-context` | Safe area insets |
-| `react-native-svg` | SVG support |
-| `react-native-sound-player` | Audio (used by host app; not by slidingBlocks) |
 
-### Dev Dependencies
+**Requirements:** Node.js ≥ 22.11.0
 
-- **Build / tooling**: `@react-native-community/cli`, `@react-native/babel-preset`, `@react-native/metro-config`
-- **TypeScript**: `typescript`, `@react-native/typescript-config`, `@tsconfig/react-native`
-- **Linting**: `eslint`, `prettier`, `@typescript-eslint/*`, `eslint-plugin-simple-import-sort`, `eslint-plugin-unused-imports`
-- **Testing**: `react-test-renderer`, `@types/react-test-renderer`
+---
+
+## Quick Start
+
+```tsx
+import { SlidingBlocks } from 'react-native-sliding-blocks'
+
+function GameScreen() {
+  return (
+    <SlidingBlocks
+      config={{
+        rowsCount: 10,
+        columnsCount: 8,
+        padding: 16,
+        explosionPoolSize: 80,
+        keysSize: 5
+      }}
+      callbacks={{
+        onScoreChange: (score) => console.log('Score:', score),
+        onGameOver: (score) => console.log('Game over:', score),
+        onRemovingStart: () => playClearSound(),
+        onFitComplete: ({ hadActualFit }) => hadActualFit && playSlideSound()
+      }}
+    />
+  )
+}
+```
+
+The library uses **Skia-drawn blocks** and a solid background by default. No assets required.
+
+---
+
+## API
+
+### Declarative API — `<SlidingBlocks />`
+
+All-in-one component. Pass config, callbacks, and optional assets/theme.
+
+```tsx
+<SlidingBlocks
+  config={SlidingBlocksConfig}
+  callbacks?: SlidingBlocksCallbacks
+  assets?: SlidingBlocksAssets
+  theme?: Partial<SlidingBlocksTheme>
+  settings?: SlidingBlocksSettingsOverrides
+  engine?: IGameEngine
+  blockRenderMode?: 'skia' | 'image'
+  showFinishOption?: boolean
+  onLoadProgress?: (progress: number) => void
+  onLoadComplete?: () => void
+/>
+```
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `config` | `SlidingBlocksConfig` | **Required.** Grid layout: `rowsCount`, `columnsCount`, `padding`, `explosionPoolSize`, `keysSize` |
+| `callbacks` | `SlidingBlocksCallbacks` | Score, game over, pause, restart, sound hooks, etc. |
+| `assets` | `SlidingBlocksAssets` | Block PNGs, background image. Omit for Skia fallbacks |
+| `theme` | `Partial<SlidingBlocksTheme>` | Overlay, score bar, block colors |
+| `settings` | `SlidingBlocksSettingsOverrides` | Block radius, explosion, checkerboard |
+| `engine` | `IGameEngine` | Optional pre-created engine |
+| `blockRenderMode` | `'skia' \| 'image'` | `'skia'` = draw blocks (default), `'image'` = PNG assets |
+| `showFinishOption` | `boolean` | Show "Finish" in pause overlay; use with `onFinish` |
+
+#### Imperative handle (ref)
+
+```tsx
+const ref = useRef<SlidingBlocksHandle>(null)
+
+<SlidingBlocks ref={ref} config={...} callbacks={...} />
+
+// Then:
+ref.current?.pause()
+ref.current?.resume()
+ref.current?.restart()
+ref.current?.isPaused()  // boolean
+```
+
+---
+
+### Composable API — `useSlidingBlocks`
+
+Build custom layouts (e.g. custom score bar, different ordering).
+
+```tsx
+import { useSlidingBlocks } from 'react-native-sliding-blocks'
+
+function CustomGameScreen() {
+  const { Root, ScoreBar, GameArea, ref } = useSlidingBlocks({
+    config: { rowsCount: 10, columnsCount: 8, padding: 16, explosionPoolSize: 80, keysSize: 5 },
+    callbacks: { onScoreChange, onGameOver }
+  })
+
+  return (
+    <Root>
+      <MyCustomScoreBar />
+      <GameArea blockRenderMode="skia" onLoadComplete={() => setReady(true)} />
+    </Root>
+  )
+}
+```
+
+Returns:
+
+- `Root` — Wrapper; must wrap `ScoreBar` and `GameArea`
+- `ScoreBar` — Default score bar
+- `GameArea` — Game canvas (blocks, grid, overlays)
+- `ref` — `SlidingBlocksHandle` (pause, resume, restart, isPaused)
+
+For fully custom layouts, use `useComposableSlidingBlocksContext()` inside `Root` to access layout and shared values.
+
+---
+
+### Low-level API
+
+- **`GameRootView`** — Minimal wrapper when you need full control over layout and bridge.
+- **`createGameEngine(config, host?)`** — Create a React-agnostic engine for headless testing or custom integration.
+- **`PreloaderOverlay`**, **`scheduleIdle`**, **`cancelIdle`**, **`GESTURE_SENSITIVITY`**, **`layoutConsts`** — Exported for advanced use.
+
+---
+
+## Configuration
+
+### SlidingBlocksConfig (game layout)
+
+```ts
+type SlidingBlocksConfig = {
+  rowsCount: number      // e.g. 10
+  columnsCount: number   // e.g. 8
+  padding: number        // screen padding (px)
+  explosionPoolSize: number
+  keysSize: number       // block types (colors)
+}
+```
+
+### SlidingBlocksCallbacks
+
+| Callback | When |
+|----------|------|
+| `onScoreChange` | After each row clear |
+| `onGameOver` | Game ends |
+| `onPause` / `onResume` | User pauses/resumes |
+| `onRestart` | User restarts (from overlay) |
+| `onFinish` | User taps "Finish" in pause overlay |
+| `onGestureStart` / `onGestureEnd` | Pan starts/ends |
+| `onRemovingStart` / `onRemovingEnd` | Row clear animation starts/ends |
+| `onFitStart` / `onFitComplete` | Slide/snap animation; `onFitComplete({ hadActualFit })` for slide sound |
+| `onRowAdded` | New row added at top |
+
+### SlidingBlocksAssets
+
+| Asset | Description |
+|-------|-------------|
+| `blockImages` | Map of color hex → `[1×1, 1×2, 1×3, 1×4]` image sources (e.g. `require(...)`) |
+| `backgroundImage` | Full-screen background image source |
+
+Omit for fallbacks: solid background, Skia-drawn blocks.
+
+---
+
+## Game Mechanics
+
+- **Grid** — Configurable columns × rows (e.g. 8×10)
+- **Blocks** — Colored segments (1–4 cells). Drag left/right to reposition.
+- **Clearing** — Fill a row completely to clear it; blocks above drop.
+- **Super segments** — Rare black segments; when cleared, also wipe overlapping blocks in adjacent rows for combos.
+- **Score & multiplier** — Animated display.
+
+---
+
+## Architecture
+
+The package uses **MVVM** with RxJS and Reanimated. The engine is React-agnostic; a bridge wires RxJS streams to SharedValues. No React commits during gameplay—all rendering is driven by SharedValues and Skia.
+
+For a deep dive, see [src/CONCEPTS.md](src/CONCEPTS.md).
+
+| Layer | Path | Responsibility |
+|-------|------|----------------|
+| **Engine** | `engine/` | Pure game logic, RxJS, no React |
+| **Bridge** | `bridge/` | RxJS → SharedValues binding |
+| **UI** | `ui/` | React components, Skia, SharedValues |
+
+---
 
 ## Project Structure
 
 ```
-├── slidingBlocks/              # Game module (no bundled assets, host injects everything)
-│   ├── engine/                 # Pure game logic, RxJS, no React
-│   │   ├── core/               # BinderHook, pipeline, binding utilities
-│   │   ├── model/              # Domain types, fit, remove, generate
-│   │   └── viewmodels/         # GameViewModel, GestureCoordinator, TaskPipeline
-│   ├── bridge/                 # RxJS → SharedValues (useEngineBridge, GestureCompletionOrchestrator)
-│   ├── ui/                     # React components, Skia, contexts
-│   ├── config.ts               # computeGameConfig, toEngineConfig
-│   ├── types.ts                # GameLayoutSettings, BlockSettings, etc.
-│   └── CONCEPTS.md             # Architectural patterns and recipe for new games
-├── src/                        # Host app
-│   ├── screens/                # GameScreen, ComposableGameScreen
-│   ├── assets/                 # slidingBlocksAssets (block images, bg) — host provides
-│   ├── theme/
-│   └── hooks/
-├── assets/                     # App assets (blocks, bg, icons)
-├── ios/
-├── android/
-├── index.js
-└── app.json
+react-native-sliding-blocks/
+├── src/                # Library source
+│   ├── bridge/         # RxJS → SharedValues (useEngineBridge, GestureCompletionOrchestrator)
+│   ├── engine/         # Game logic, RxJS, no React
+│   ├── ui/             # React components, Skia, contexts
+│   ├── config.ts
+│   ├── types.ts
+│   ├── CONCEPTS.md     # Architecture guide
+│   └── index.ts
+├── example/            # Example React Native app
+└── package.json
 ```
 
-## Getting Started
+---
+
+## Example App
+
+An example app lives in `example/`—it shows the declarative and composable APIs, settings, sounds, and themes.
 
 ```bash
+# From repo root
 yarn install
-yarn start
-yarn ios    # or: yarn android
+yarn example          # Install example deps
+yarn example:start    # Start Metro
+yarn example:ios      # Run iOS
+yarn example:android  # Run Android
 ```
 
-Make sure you have the React Native environment set up for [iOS](https://reactnative.dev/docs/environment-setup) or [Android](https://reactnative.dev/docs/environment-setup).
+Requires [React Native environment setup](https://reactnative.dev/docs/environment-setup).
 
-### Scripts
+---
+
+## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `yarn start` | Start Metro bundler |
-| `yarn ios` | Run on iOS simulator/device |
-| `yarn android` | Run on Android emulator/device |
-| `yarn lint` | Run ESLint on source files |
+| `yarn lint` | Lint library source |
+| `yarn example` | Install example dependencies |
+| `yarn example:start` | Start Metro |
+| `yarn example:ios` | Run on iOS |
+| `yarn example:android` | Run on Android |
 
-## Plans / TODO
+---
 
-- **Improve design** — Polish UI, theming, and visual feedback.
-- **Persist state** — Save game state and high score so players can resume.
-- **Better score calculation** — Combo bonuses, super-segment rewards, difficulty scaling.
-- **Difficulty / settings** — Configurable grid size, speed, or difficulty levels.
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| **Framework** | React Native |
+| **Graphics** | Skia (`@shopify/react-native-skia`) |
+| **Animations** | React Native Reanimated |
+| **Gestures** | React Native Gesture Handler |
+| **State / Streams** | RxJS |
+
+---
 
 ## License
 
-MIT License — free for personal and commercial use.
+MIT
