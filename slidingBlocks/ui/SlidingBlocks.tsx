@@ -76,7 +76,10 @@ const SlidingBlocksInner = memo(
   callbacksRef.current = callbacks
 
   const [engine] = useState(() =>
-    engineProp ?? createGameEngine(toEngineConfig(config))
+    engineProp ??
+    createGameEngine(toEngineConfig(config), undefined, {
+      onRowAdded: (row) => callbacksRef.current.onRowAdded?.(row)
+    })
   )
   const shared = useSharedValuesMap(config)
   const blockImages = assets?.blockImages
@@ -232,7 +235,8 @@ const SlidingBlocksInner = memo(
         onRemovingStart: callbacks.onRemovingStart ?? noop,
         onRemovingEnd: callbacks.onRemovingEnd ?? noop,
         onFitStart: callbacks.onFitStart ?? noop,
-        onFitComplete: callbacks.onFitComplete ?? (() => {})
+        onFitComplete: callbacks.onFitComplete ?? (() => {}),
+        onRowAdded: callbacks.onRowAdded ?? noop
       },
       showFinishOption
     }),

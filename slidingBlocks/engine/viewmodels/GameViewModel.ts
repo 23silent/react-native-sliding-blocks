@@ -50,7 +50,8 @@ export class GameViewModel {
     private readonly config: EngineConfig,
     private readonly stepComplete$: Observable<void>,
     private readonly overlayFadeOutComplete$: Observable<void>,
-    private readonly host?: GameEngineHost
+    private readonly host?: GameEngineHost,
+    private readonly onRowAdded?: (row: PathSegment[]) => void
   ) {
     this.keys = config.keys
     this.items$ = new BehaviorSubject<Partial<Record<string, PathSegmentExt>>>(
@@ -177,7 +178,8 @@ export class GameViewModel {
           this.nextOverwriteIndex = nextOverwriteIndex
           this.rows = rows
           this.items$.next(newItems)
-        }
+        },
+        onRowAdded: this.onRowAdded
       })
       if (this.applyVersion !== versionAtStart) return
     }

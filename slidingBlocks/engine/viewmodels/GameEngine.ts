@@ -59,13 +59,18 @@ export class GameEngine implements IGameEngine {
   readonly gesturePipeline$: Observable<void>
   readonly stepComplete$: Observable<void>
 
-  constructor(config: EngineConfig, host?: GameEngineHost) {
+  constructor(
+    config: EngineConfig,
+    host?: GameEngineHost,
+    options?: { onRowAdded?: (row: PathSegment[]) => void }
+  ) {
     this.stepComplete$ = this.stepCompleteSubject$.asObservable()
     this.game = new GameViewModel(
       config,
       this.stepComplete$,
       this.overlayFadeOutCompleteSubject$.asObservable(),
-      host
+      host,
+      options?.onRowAdded
     )
     this.gesture = new GestureCoordinator(this.game, {
       cellSize: config.cellSize,

@@ -7,7 +7,7 @@
 
 export { GameEngine, type IGameEngine } from './viewmodels/GameEngine'
 export type { CompleteEndResult, GestureBounds } from './viewmodels/GestureCoordinator'
-export { createGameEngine } from './factory'
+export { createGameEngine, type CreateGameEngineOptions } from './factory'
 export type { EngineConfig } from './config'
 export type { GameEngineHost } from './host'
 export {

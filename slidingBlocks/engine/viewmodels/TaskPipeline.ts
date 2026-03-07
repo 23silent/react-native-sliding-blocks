@@ -18,6 +18,7 @@ export type TaskApplyContext = {
   getStepCompleteTimeout: (step: string) => number
   onScoreUpdate: (score: number) => void
   onApplyState: (nextOverwriteIndex: number, rows: PathSegment[][], newItems: Record<string, PathSegmentExt | undefined>) => void
+  onRowAdded?: (row: PathSegment[]) => void
 }
 
 function updateScoreMiddleware(
@@ -27,6 +28,20 @@ function updateScoreMiddleware(
   const { task } = ctx
   if (task.step === 'remove' && task.score > 0) {
     ctx.onScoreUpdate(task.score)
+  }
+  return next()
+}
+
+function onRowAddedMiddleware(
+  ctx: TaskApplyContext,
+  next: () => Promise<void>
+): Promise<void> {
+  if (ctx.task.step === 'add' && ctx.task.rows.length > 0) {
+    try {
+      ctx.onRowAdded?.(ctx.task.rows[0])
+    } catch {
+      nop()
+    }
   }
   return next()
 }
@@ -57,6 +72,7 @@ async function waitForAnimationMiddleware(
 
 const runTaskApplyPipeline = createPipeline<TaskApplyContext>([
   updateScoreMiddleware,
+  onRowAddedMiddleware,
   applyStateMiddleware,
   waitForAnimationMiddleware
 ])

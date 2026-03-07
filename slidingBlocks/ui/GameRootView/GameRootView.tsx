@@ -60,8 +60,13 @@ export const GameRootView = memo(function GameRootView({
     [layoutConfig, screenWidth]
   )
 
+  const callbacksRef = useRef(callbacks)
+  callbacksRef.current = callbacks
   const [engine] = useState(() =>
-    engineProp ?? createGameEngine(toEngineConfig(config))
+    engineProp ??
+    createGameEngine(toEngineConfig(config), undefined, {
+      onRowAdded: (row) => callbacksRef.current.onRowAdded?.(row)
+    })
   )
   const shared = useSharedValuesMap(config)
   const blockImages = assets?.blockImages
@@ -105,8 +110,6 @@ export const GameRootView = memo(function GameRootView({
     onOverlayFadeOutComplete
   })
 
-  const callbacksRef = useRef(callbacks)
-  callbacksRef.current = callbacks
   useEngineBridge(engine, shared, {
     orchestrator,
     config,
@@ -115,6 +118,7 @@ export const GameRootView = memo(function GameRootView({
     onFitStart: () => callbacksRef.current.onFitStart?.(),
     onFitComplete: (p) => callbacksRef.current.onFitComplete?.(p)
   })
+
 
   const hidePauseOverlay = useCallback(() => {
     isPausedRef.current = false

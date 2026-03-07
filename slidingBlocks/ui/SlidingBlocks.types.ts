@@ -7,7 +7,7 @@ import type {
   GameLayoutSettings
 } from '../types'
 import type { GameConfig } from '../config'
-import type { IGameEngine } from '../engine'
+import type { IGameEngine, PathSegment } from '../engine'
 
 /** Block fill: 'image' = PNG assets, 'color' = solid from segment, 'gradient' = gradient (super blocks) */
 export type BlockFillMode = 'image' | 'color' | 'gradient'
@@ -136,6 +136,8 @@ export type SlidingBlocksCallbacks = {
   onFitStart?: () => void
   /** Called when the fit/snap animation completes. hadActualFit=true when blocks actually moved. */
   onFitComplete?: (payload: FitCompletePayload) => void
+  /** Called when a new row is added at the top (after rows are cleared). */
+  onRowAdded?: (row: PathSegment[]) => void
 }
 
 /**
