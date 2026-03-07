@@ -1,14 +1,27 @@
 {
   "name": "react-native-sliding-blocks",
-  "version": "0.0.1",
+  "version": "0.0.9",
   "description": "React Native sliding blocks game library",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/23silent/react-native-sliding-blocks.git"
+  },
   "main": "src/index.ts",
   "types": "src/index.ts",
   "react-native": "src/index.ts",
   "scripts": {
+    "version:patch": "npm version patch --no-git-tag-version",
+    "version:minor": "npm version minor --no-git-tag-version",
+    "version:major": "npm version major --no-git-tag-version",
+    "release:patch": "npm version patch -m \"chore: release %s\" && git push && git push --tags",
+    "release:minor": "npm version minor -m \"chore: release %s\" && git push && git push --tags",
+    "release:major": "npm version major -m \"chore: release %s\" && git push && git push --tags",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
     "example": "cd example && yarn",
     "example:start": "cd example && yarn start",
+    "example:start:dev": "cd example && yarn start --reset-cache",
     "example:ios": "cd example && yarn ios",
     "example:android": "cd example && yarn android"
   },
@@ -23,16 +36,20 @@
   },
   "devDependencies": {
     "@react-native/eslint-config": "0.84.1",
+    "eslint-plugin-jest": "^29.0.1",
     "@types/react": "^19.2.0",
-    "@typescript-eslint/eslint-plugin": "^7.18.0",
-    "@typescript-eslint/parser": "^7.18.0",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^8.10.0",
-    "eslint-plugin-prettier": "^5.2.1",
-    "typescript": "^5.8.3"
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "typescript": "~5.5.4"
   },
   "engines": {
     "node": ">= 22.11.0"
   },
-  "files": ["src"]
+  "files": [
+    "src"
+  ]
 }

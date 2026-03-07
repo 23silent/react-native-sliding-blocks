@@ -6,7 +6,7 @@ import Animated, {
   withTiming
 } from 'react-native-reanimated'
 
-import { LOADING_OVERLAY } from './layoutConsts'
+import { LOADING_OVERLAY } from '../constants/layout'
 import type { SlidingBlocksTheme } from './SlidingBlocks.types'
 import { DEFAULT_SLIDING_BLOCKS_THEME } from './SlidingBlocks.types'
 

@@ -1,5 +1,5 @@
 /**
- * Types used by SlidingBlocks. Self-contained - no host dependencies.
+ * Settings types used by SlidingBlocks. Self-contained - no host dependencies.
  */
 
 /** Block rendering (Skia-drawn blocks) */
@@ -34,6 +34,8 @@ export type ExplosionPresetsSettings = {
   particleCount: number
   trajectoryPresetCount: number
   shapePresetCount: number
+  /** 'low' = fewer particles, circles only - smoother on low-end devices */
+  performanceMode?: 'default' | 'low'
 }
 
 /** Game layout config */

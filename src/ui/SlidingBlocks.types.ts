@@ -1,3 +1,5 @@
+import type { GameConfig } from '../config'
+import type { IGameEngine, PathSegment } from '../engine'
 import type {
   AppSettings,
   BlockSettings,
@@ -5,9 +7,7 @@ import type {
   ExplosionPresetsSettings,
   ExplosionSettings,
   GameLayoutSettings
-} from '../types'
-import type { GameConfig } from '../config'
-import type { IGameEngine, PathSegment } from '../engine'
+} from '../types/settings'
 
 /** Block fill: 'image' = PNG assets, 'color' = solid from segment, 'gradient' = gradient (super blocks) */
 export type BlockFillMode = 'image' | 'color' | 'gradient'

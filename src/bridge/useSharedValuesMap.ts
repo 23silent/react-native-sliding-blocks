@@ -90,6 +90,7 @@ export function useSharedValuesMap(config: GameConfig): SharedValuesMap {
     pauseOpacity: useSharedValue(0)
   }
 
+  /* eslint-disable react-hooks/rules-of-hooks -- SharedValues in reduce/Array.from; keys/length stable */
   const items = keys.reduce(
     (acc, key) => {
       acc[key] = {

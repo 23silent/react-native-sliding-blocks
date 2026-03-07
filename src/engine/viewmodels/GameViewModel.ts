@@ -1,17 +1,17 @@
 import { BehaviorSubject, Observable, Subject } from 'rxjs'
 import { take } from 'rxjs/operators'
 
+import type { EngineConfig } from '../config'
+import type { GameEngineHost } from '../host'
 import { ANIM } from '../model/animConsts'
-import { ProcessData } from '../model/ProcessData'
 import { prepareTasks } from '../model/prepareTasks'
+import { ProcessData } from '../model/ProcessData'
 import type {
   ActiveItem,
   PathSegment,
   PathSegmentExt,
   TaskQueueItem
 } from '../model/types'
-import type { EngineConfig } from '../config'
-import type { GameEngineHost } from '../host'
 import { runTaskApplyPipeline } from './TaskPipeline'
 
 /**
@@ -153,7 +153,7 @@ export class GameViewModel {
     const versionAtStart = this.applyVersion
     this.setBusy(true)
     let hasRemoves = false
-    const { keysSize, rowsCount } = this.config
+    const { keysSize: _keysSize, rowsCount } = this.config
 
     for (let index = 0; index < tasks.length; index++) {
       if (this.applyVersion !== versionAtStart) return

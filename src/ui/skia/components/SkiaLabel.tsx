@@ -1,8 +1,7 @@
+import type { SkFont } from '@shopify/react-native-skia'
 import { Text } from '@shopify/react-native-skia'
 import React from 'react'
 import type { SharedValue } from 'react-native-reanimated'
-
-import type { SkFont } from '@shopify/react-native-skia'
 
 type TextProp = string | SharedValue<string>
 

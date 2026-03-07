@@ -3,10 +3,10 @@ import { StyleSheet, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { scheduleOnRN } from 'react-native-worklets'
 
-import { GESTURE_SENSITIVITY } from '../consts'
-import type { IGameEngine } from '../../engine'
 import type { SharedValuesMap } from '../../bridge'
-import type { GameLayout } from '../GameCanvas'
+import { GESTURE_SENSITIVITY } from '../../constants/game'
+import type { IGameEngine } from '../../engine'
+import type { GameLayout } from '../../types/layout'
 
 type GameGestureViewEngineProps = PropsWithChildren<{
   engine: IGameEngine

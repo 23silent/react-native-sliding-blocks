@@ -3,47 +3,33 @@ import {
   Fill,
   Group,
   Image,
-  LinearGradient,
-  RoundedRect,
   rect,
   rrect,
-  useImage,
-  vec
+  useImage
 } from '@shopify/react-native-skia'
+import React, { memo, useMemo } from 'react'
 
-import { CheckerboardGrid, Panel, SkiaButton, SkiaLabel } from '../skia'
-import React, { memo, useEffect, useMemo, useRef } from 'react'
-import { useDerivedValue } from 'react-native-reanimated'
-
-import type { GameConfig } from '../../config'
-import {
-  LOADING_OVERLAY,
-  SCORE_BAR,
-  SKIA_BUTTON_RADIUS,
-  TOP_PAUSE
-} from '../layoutConsts'
-import { fonts } from '../utils/fonts'
-import { useSlidingBlocksContext } from '../SlidingBlocksContext'
 import type { SharedValuesMap } from '../../bridge'
+import type { GameConfig } from '../../config'
+import { TOTAL_BLOCK_ASSETS } from '../../constants/game'
+import type { BlockMap } from '../../engine'
+import type { GameLayout } from '../../types/layout'
+import { CheckerboardGrid, Panel } from '../skia'
+import type { ImageSource } from '../SlidingBlocks.types'
+import { useSlidingBlocksContext } from '../SlidingBlocksContext'
 import { GameCanvasExplosion } from './GameCanvasExplosion'
 import { GameCanvasGhost } from './GameCanvasGhost'
 import { GameCanvasIndicator } from './GameCanvasIndicator'
 import { GameCanvasItem } from './GameCanvasItem'
+import { GameCanvasScoreBar } from './GameCanvasScoreBar'
 import { GameOverOverlay } from './GameOverOverlay'
 import { PauseOverlay } from './PauseOverlay'
-import type { BlockMap } from '../../engine'
-import type { ImageSource } from '../SlidingBlocks.types'
-import { scheduleIdle, cancelIdle } from '../utils/scheduleIdle'
+import { useAssetLoadProgress } from './useAssetLoadProgress'
 
-export type GameLayout = {
-  contentTop: number
-  gameAreaX: number
-  gameAreaY: number
-  actionsBarLeft: number
-  actionsBarWidth: number
-}
-
+export type { GameLayout } from '../../types/layout'
 export type BlockRenderMode = 'image' | 'skia'
+
+const styles = { canvas: { flex: 1 } }
 
 type GameCanvasProps = {
   shared: SharedValuesMap
@@ -107,17 +93,16 @@ export const GameCanvas = memo(function GameCanvas({
   const bgImage = useImage(
     (backgroundImage ?? undefined) as Parameters<typeof useImage>[0]
   )
-  const completedRef = useRef(false)
   const useSkiaDrawing =
     blockRenderMode === 'skia' || !hasBlockImages
   const totalAssets = useMemo(() => {
     const blockCount =
-      hasBlockImages && blockRenderMode === 'image' ? 7 * 4 : 0
+      hasBlockImages && blockRenderMode === 'image' ? TOTAL_BLOCK_ASSETS : 0
     const bgCount = backgroundImage != null ? 1 : 0
     return Math.max(1, blockCount + bgCount)
   }, [hasBlockImages, blockRenderMode, backgroundImage])
 
-  const progress = useMemo(
+  const loadedAssets = useMemo(
     () =>
       countLoadedAssets(
         block,
@@ -125,71 +110,14 @@ export const GameCanvas = memo(function GameCanvas({
         hasBlockImages,
         blockRenderMode,
         totalAssets
-      ) / totalAssets,
+      ),
     [block, bgImage, hasBlockImages, blockRenderMode, totalAssets]
   )
-  const isAssetsReady = progress >= 1
 
-  useEffect(() => {
-    onLoadProgress?.(progress)
-  }, [progress, onLoadProgress])
-
-  const idleRef = useRef<number | null>(null)
-  useEffect(() => {
-    if (!isAssetsReady || !onLoadComplete || completedRef.current) return
-    const t = setTimeout(() => {
-      idleRef.current = scheduleIdle(() => {
-        if (!completedRef.current) {
-          completedRef.current = true
-          onLoadComplete()
-        }
-      })
-    }, LOADING_OVERLAY.MIN_DISPLAY_MS)
-    return () => {
-      clearTimeout(t)
-      if (idleRef.current != null) {
-        cancelIdle(idleRef.current)
-        idleRef.current = null
-      }
-    }
-  }, [isAssetsReady, onLoadComplete])
-
-  const scoreText = useDerivedValue(() => `${Math.round(shared.score.value)}`)
-  const multiplierText = useDerivedValue(
-    () => `${Math.round(shared.multiplier.value)}`
-  )
-
-  const {
-    HEIGHT: barHeight,
-    PADDING_H: barPadding,
-    PAUSE_GAP,
-    STATS_GAP,
-    STATS_RIGHT_GAP,
-    PILL_PADDING,
-    PILL_MIN_WIDTH
-  } = SCORE_BAR
-
-  const pauseLeft = layout.actionsBarLeft + TOP_PAUSE.LEFT_OFFSET
-  const pauseTop = TOP_PAUSE.TOP_OFFSET
-  const statsZoneLeft = pauseLeft + TOP_PAUSE.WIDTH + PAUSE_GAP
-  const statsZoneRight =
-    layout.actionsBarLeft + layout.actionsBarWidth - barPadding - STATS_RIGHT_GAP
-  const statsZoneWidth = Math.max(0, statsZoneRight - statsZoneLeft)
-  const pillWidth = Math.min(
-    PILL_MIN_WIDTH,
-    Math.max(0, (statsZoneWidth - STATS_GAP) / 2)
-  )
-  const scoreLeft = statsZoneLeft
-  const multiplierLeft = scoreLeft + pillWidth + STATS_GAP
-  const pillTop = (barHeight - 32) / 2
-  const pillHeight = 32
-  const pillRadius = 10
-  const labelY = pillTop + 10
-  const valueY = pillTop + 26
-  const textLeft = PILL_PADDING
+  useAssetLoadProgress(totalAssets, loadedAssets, onLoadProgress, onLoadComplete)
 
   return (
-    <Canvas style={{ flex: 1 }}>
+    <Canvas style={styles.canvas}>
       {bgImage ? (
         <Image
           image={bgImage}
@@ -204,77 +132,11 @@ export const GameCanvas = memo(function GameCanvas({
       )}
       <Fill color="rgba(255,255,255,0.3)" />
       <Group transform={[{ translateY: layout.contentTop }]}>
-        {/* Score bar — gradient background with subtle glass effect */}
-        <RoundedRect
-          x={layout.actionsBarLeft}
-          y={0}
-          width={layout.actionsBarWidth}
-          height={barHeight}
-          r={14}
-        >
-          <LinearGradient
-            start={vec(0, 0)}
-            end={vec(layout.actionsBarWidth, barHeight)}
-            colors={theme.scoreBar.gradientColors}
-          />
-        </RoundedRect>
-        <SkiaButton
-          x={pauseLeft}
-          y={pauseTop}
-          width={TOP_PAUSE.WIDTH}
-          height={TOP_PAUSE.HEIGHT}
-          r={SKIA_BUTTON_RADIUS}
-          color={theme.scoreBar.accentColor}
-          label="Pause"
-          labelX={pauseLeft + (TOP_PAUSE.WIDTH - 44) / 2}
-          labelY={pauseTop + TOP_PAUSE.HEIGHT / 2 + 7}
-          font={fonts.buttonSmall}
-          textColor="white"
-        />
-        {/* Center stats — Score and Multiplier pills (responsive width) */}
-        <RoundedRect
-          x={scoreLeft}
-          y={pillTop}
-          width={pillWidth}
-          height={pillHeight}
-          r={pillRadius}
-          color={theme.scoreBar.pillColor}
-        />
-        <SkiaLabel
-          x={scoreLeft + textLeft}
-          y={labelY}
-          text="Score"
-          font={fonts.label}
-          color={theme.scoreBar.labelColor}
-        />
-        <SkiaLabel
-          x={scoreLeft + textLeft}
-          y={valueY}
-          text={scoreText}
-          font={fonts.score}
-          color={theme.scoreBar.valueColor}
-        />
-        <RoundedRect
-          x={multiplierLeft}
-          y={pillTop}
-          width={pillWidth}
-          height={pillHeight}
-          r={pillRadius}
-          color={theme.scoreBar.multiplierPillColor}
-        />
-        <SkiaLabel
-          x={multiplierLeft + textLeft}
-          y={labelY}
-          text="Multiplier"
-          font={fonts.label}
-          color={theme.scoreBar.labelColor}
-        />
-        <SkiaLabel
-          x={multiplierLeft + textLeft}
-          y={valueY}
-          text={multiplierText}
-          font={fonts.score}
-          color={theme.scoreBar.valueColor}
+        <GameCanvasScoreBar
+          layout={layout}
+          shared={shared}
+          theme={theme}
+          embedded
         />
       </Group>
       <Group

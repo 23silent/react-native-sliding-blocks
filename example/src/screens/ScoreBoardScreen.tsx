@@ -2,12 +2,7 @@ import React from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import {
-  MENU_BG,
-  TEXT_PRIMARY,
-  TEXT_SECONDARY,
-  TEXT_MUTED
-} from '../theme'
+import { MENU_BG, TEXT_MUTED, TEXT_PRIMARY, TEXT_SECONDARY } from '../theme'
 
 type Props = {
   onBack: () => void

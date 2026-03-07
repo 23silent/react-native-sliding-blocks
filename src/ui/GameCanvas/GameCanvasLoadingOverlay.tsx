@@ -1,8 +1,8 @@
 import { Group, RoundedRect } from '@shopify/react-native-skia'
 import React from 'react'
 
+import { LOADING_OVERLAY } from '../../constants/layout'
 import { Panel, SkiaLabel } from '../skia'
-import { LOADING_OVERLAY } from '../layoutConsts'
 import type { SlidingBlocksTheme } from '../SlidingBlocks.types'
 import { fonts } from '../utils/fonts'
 

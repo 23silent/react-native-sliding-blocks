@@ -1,18 +1,22 @@
 module.exports = {
     root: true,
     extends: ['@react-native', 'eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
-    plugins: ['@typescript-eslint', 'prettier', 'unused-imports', 'simple-import-sort'],
+    settings: { react: { version: '18.2' } },
+    plugins: ['@typescript-eslint', 'unused-imports', 'simple-import-sort'],
     overrides: [
         {
             files: ['*.ts', '*.tsx'],
             rules: {
-                'prettier/prettier': ['error'],
                 'react-hooks/exhaustive-deps': 'off',
-                '@typescript-eslint/no-shadow': ['off'],
+                '@typescript-eslint/no-shadow': 'off',
                 'no-console': ['error', { allow: ['warn', 'error'] }],
                 'no-shadow': 'off',
                 'no-undef': 'off',
                 'no-unused-vars': 'off',
+                '@typescript-eslint/no-unused-vars': [
+                    'warn',
+                    { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }
+                ],
                 'unused-imports/no-unused-imports': 'error',
                 'unused-imports/no-unused-vars': [
                     'warn',
@@ -20,13 +24,13 @@ module.exports = {
                         vars: 'all',
                         varsIgnorePattern: '^_',
                         args: 'after-used',
-                        argsIgnorePattern: '^_',
-                    },
+                        argsIgnorePattern: '^_'
+                    }
                 ],
                 semi: [2, 'never'],
                 'simple-import-sort/imports': 'error',
-                'simple-import-sort/exports': 'error',
-            },
-        },
-    ],
-};
+                'simple-import-sort/exports': 'error'
+            }
+        }
+    ]
+}

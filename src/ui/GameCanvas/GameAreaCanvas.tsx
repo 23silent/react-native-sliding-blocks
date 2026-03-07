@@ -1,24 +1,23 @@
 import { Canvas, Group, rect, rrect } from '@shopify/react-native-skia'
-import React, { memo, useEffect, useMemo, useRef } from 'react'
+import React, { memo } from 'react'
 
-import { CheckerboardGrid, Panel } from '../skia'
-import { TOTAL_ASSETS_IMAGE } from '../consts'
-import type { GameConfig } from '../../config'
-import { LOADING_OVERLAY } from '../layoutConsts'
-import { useSlidingBlocksContext } from '../SlidingBlocksContext'
+import { TOTAL_BLOCK_ASSETS } from '../../constants/game'
+import type { BlockMap } from '../../engine'
 import { useComposableSlidingBlocksContext } from '../ComposableSlidingBlocksContext'
+import { CheckerboardGrid, Panel } from '../skia'
+import { useSlidingBlocksContext } from '../SlidingBlocksContext'
+import type { BlockRenderMode } from './GameCanvas'
 import { GameCanvasExplosion } from './GameCanvasExplosion'
 import { GameCanvasGhost } from './GameCanvasGhost'
 import { GameCanvasIndicator } from './GameCanvasIndicator'
 import { GameCanvasItem } from './GameCanvasItem'
 import { GameOverOverlay } from './GameOverOverlay'
 import { PauseOverlay } from './PauseOverlay'
-import type { BlockRenderMode } from './GameCanvas'
-import { scheduleIdle, cancelIdle } from '../utils/scheduleIdle'
+import { useAssetLoadProgress } from './useAssetLoadProgress'
 
 /** Count block images for image mode; skia mode has no assets to load. */
 function countLoadedBlockAssets(
-  block: import('../../engine').BlockMap,
+  block: BlockMap,
   blockRenderMode: BlockRenderMode
 ): number {
   if (blockRenderMode !== 'image') return 0
@@ -31,10 +30,18 @@ function countLoadedBlockAssets(
   return loaded
 }
 
+/**
+ * Props for GameAreaCanvas (composable API).
+ * Use with useSlidingBlocks; render GameArea inside Root.
+ */
 type GameAreaCanvasProps = {
+  /** 'image' loads block assets; 'skia' draws blocks without images. */
   blockRenderMode?: BlockRenderMode
+  /** When true, pause overlay shows a "Finish" button. */
   showFinishOption?: boolean
+  /** Called as block images load (0–1). Use to drive a loading overlay. */
   onLoadProgress?: (progress: number) => void
+  /** Called when assets are ready and MIN_DISPLAY_MS has elapsed. */
   onLoadComplete?: () => void
 }
 
@@ -61,46 +68,15 @@ export const GameAreaCanvas = memo(function GameAreaCanvas({
     keys
   } = config
 
-  const completedRef = useRef(false)
   const useSkiaDrawing = blockRenderMode === 'skia' || !hasBlockImages
   const totalAssets =
-    hasBlockImages && blockRenderMode === 'image'
-      ? TOTAL_ASSETS_IMAGE - 1
-      : 1
+    hasBlockImages && blockRenderMode === 'image' ? TOTAL_BLOCK_ASSETS : 1
   const loadedAssets =
     hasBlockImages && blockRenderMode === 'image'
       ? countLoadedBlockAssets(block, blockRenderMode)
       : 1
 
-  const progress = useMemo(
-    () => loadedAssets / totalAssets,
-    [loadedAssets, totalAssets]
-  )
-  const isAssetsReady = progress >= 1
-
-  useEffect(() => {
-    onLoadProgress?.(progress)
-  }, [progress, onLoadProgress])
-
-  const idleRef = useRef<number | null>(null)
-  useEffect(() => {
-    if (!isAssetsReady || !onLoadComplete || completedRef.current) return
-    const t = setTimeout(() => {
-      idleRef.current = scheduleIdle(() => {
-        if (!completedRef.current) {
-          completedRef.current = true
-          onLoadComplete()
-        }
-      })
-    }, LOADING_OVERLAY.MIN_DISPLAY_MS)
-    return () => {
-      clearTimeout(t)
-      if (idleRef.current != null) {
-        cancelIdle(idleRef.current)
-        idleRef.current = null
-      }
-    }
-  }, [isAssetsReady, onLoadComplete])
+  useAssetLoadProgress(totalAssets, loadedAssets, onLoadProgress, onLoadComplete)
 
   return (
     <Canvas style={{ width: gameWidth, height: gameHeight }}>

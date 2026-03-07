@@ -1,16 +1,16 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import SoundPlayer from 'react-native-sound-player'
 import { StyleSheet, View } from 'react-native'
-
 import {
-  SlidingBlocks,
+  cancelIdle,
   PreloaderOverlay,
   scheduleIdle,
-  cancelIdle
+  SlidingBlocks
 } from 'react-native-sliding-blocks'
+import SoundPlayer from 'react-native-sound-player'
+
 import { SLIDING_BLOCKS_ASSETS } from '../assets/slidingBlocksAssets'
-import { POST_LOAD_DELAY_MS, SLIDING_BLOCKS_THEME } from '../theme'
 import { useSettings } from '../hooks/useSettings'
+import { POST_LOAD_DELAY_MS, SLIDING_BLOCKS_THEME } from '../theme'
 
 type Props = {
   onMenuPress: () => void
@@ -96,7 +96,10 @@ export function GameScreen({ onMenuPress }: Props): React.JSX.Element {
       )}
       {!ready && (
         <View style={StyleSheet.absoluteFill} pointerEvents="box-only">
-          <PreloaderOverlay progress={progress} theme={SLIDING_BLOCKS_THEME.loading} />
+          <PreloaderOverlay
+            progress={progress}
+            theme={SLIDING_BLOCKS_THEME.loading}
+          />
         </View>
       )}
     </View>

@@ -1,15 +1,11 @@
-import { Subject } from 'rxjs'
 import type { Observable } from 'rxjs'
+import { Subject } from 'rxjs'
 
-import type { ActiveItem, PathSegment, PathSegmentExt } from '../model/types'
 import type { EngineConfig } from '../config'
 import type { GameEngineHost } from '../host'
+import type { ActiveItem, PathSegment, PathSegmentExt } from '../model/types'
 import { GameViewModel } from './GameViewModel'
-import { GestureCoordinator } from './GestureCoordinator'
-import type {
-  CompleteEndResult,
-  GestureBounds
-} from './GestureCoordinator'
+import { type CompleteEndResult, type GestureBounds,GestureCoordinator } from './GestureCoordinator'
 
 export interface IGameEngine {
   readonly items$: Observable<Partial<Record<string, PathSegmentExt>>>

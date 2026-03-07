@@ -46,8 +46,9 @@ export const remove = (
     let left = 0
     let right = adjRow.length
     while (left < right) {
-      const mid = (left + right) >> 1
-      adjRow[mid].start < overlapEnd ? (left = mid + 1) : (right = mid)
+      const mid = Math.floor((left + right) / 2)
+      if (adjRow[mid].start < overlapEnd) left = mid + 1
+      else right = mid
     }
 
     for (let i = 0; i < left; i++) {

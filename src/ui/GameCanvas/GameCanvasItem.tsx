@@ -1,11 +1,11 @@
 import React from 'react'
-
-import { activeGestureSync, BlockImage, useReactionRule } from '../skia'
-import type { BlockMap } from '../../engine'
-import type { BlockSettings } from '../../types'
-import type { BlockTheme } from '../SlidingBlocks.types'
-import type { ItemSlotSharedValues } from '../../bridge'
 import type { SharedValue } from 'react-native-reanimated'
+
+import type { ItemSlotSharedValues } from '../../bridge'
+import type { BlockMap } from '../../engine'
+import type { BlockSettings } from '../../types/settings'
+import { activeGestureSync, BlockImage, useReactionRule } from '../skia'
+import type { BlockTheme } from '../SlidingBlocks.types'
 
 type Props = {
   slot: ItemSlotSharedValues

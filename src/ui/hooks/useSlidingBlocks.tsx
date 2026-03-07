@@ -1,36 +1,19 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useWindowDimensions } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { withTiming } from 'react-native-reanimated'
+import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 
-import { GAME_ROOT } from '../layoutConsts'
-import type { PathSegment } from '../../engine'
-import { createGameEngine } from '../../engine'
-import {
-  useEngineBridge,
-  useGestureCompletionOrchestrator,
-  useSharedValuesMap
-} from '../../bridge'
-import { computeGameConfig, toEngineConfig } from '../../config'
-import { useBlocks } from './useBlocks'
-import { GameGestureViewEngine } from '../GameGestureView/GameGestureViewEngine'
-import { hitTestTopPause } from '../utils/hitTest'
-import { hitTestRestart as hitTestGameOverRestart } from '../utils/gameOverHitTest'
-import { hitTestPauseOverlay } from '../utils/pauseOverlayHitTest'
-import { SlidingBlocksProvider } from '../SlidingBlocksContext'
 import { ComposableSlidingBlocksProvider } from '../ComposableSlidingBlocksContext'
 import { mergeSettings } from '../defaults'
+import type { BlockRenderMode } from '../GameCanvas'
+import { GameAreaCanvas } from '../GameCanvas/GameAreaCanvas'
+import { ScoreBarCanvas } from '../GameCanvas/ScoreBarCanvas'
+import { GameRootInner } from '../GameRootView/GameRootInner'
 import {
   DEFAULT_SLIDING_BLOCKS_THEME,
   type SlidingBlocksHandle,
   type SlidingBlocksProps
 } from '../SlidingBlocks.types'
+import { SlidingBlocksProvider } from '../SlidingBlocksContext'
 import { mergeTheme, noop } from '../utils/theme'
-import { ScoreBarCanvas } from '../GameCanvas/ScoreBarCanvas'
-import { GameAreaCanvas } from '../GameCanvas/GameAreaCanvas'
-import type { BlockRenderMode } from '../GameCanvas'
-
-const { ACTIONS_BAR_HEIGHT, DIVIDER_HEIGHT } = GAME_ROOT
+import { useGameRoot } from './useGameRoot'
 
 /** Props for the GameArea component returned by useSlidingBlocks. */
 export type GameAreaProps = {
@@ -56,8 +39,7 @@ export type UseSlidingBlocksReturn = {
 }
 
 /**
- * Internal provider - runs hook logic. Stable component so children don't remount
- * when block/other deps change (which would reset loading progress).
+ * Internal provider - runs hook logic. Uses useGameRoot for shared logic.
  */
 function SlidingBlocksDataProvider({
   props: hookProps,
@@ -75,20 +57,19 @@ function SlidingBlocksDataProvider({
     theme: themeOverrides,
     callbacks = {},
     settings: settingsOverrides,
-    blockRenderMode = 'skia',
+    blockRenderMode: _blockRenderMode = 'skia',
     showFinishOption = false,
-    onLoadProgress,
-    onLoadComplete
+    onLoadProgress: _onLoadProgress,
+    onLoadComplete: _onLoadComplete
   } = hookProps
 
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions()
-  const insets = useSafeAreaInsets()
-  const isPausedRef = useRef(false)
-
-  const config = useMemo(
-    () => computeGameConfig(layoutConfig, screenWidth),
-    [layoutConfig, screenWidth]
-  )
+  const gameRoot = useGameRoot({
+    layoutConfig,
+    engine: engineProp,
+    assets,
+    callbacks,
+    showFinishOption
+  })
 
   const settings = useMemo(
     () => mergeSettings(settingsOverrides),
@@ -100,160 +81,16 @@ function SlidingBlocksDataProvider({
     [themeOverrides]
   )
 
-  const callbacksRef = useRef(callbacks)
-  callbacksRef.current = callbacks
-
-  const [engine] = useState(() =>
-    engineProp ??
-    createGameEngine(toEngineConfig(config), undefined, {
-      onRowAdded: (row) => callbacksRef.current.onRowAdded?.(row)
-    })
-  )
-  const shared = useSharedValuesMap(config)
-  const blockImages = assets?.blockImages
-  const hasBlockImages =
-    !!blockImages && Object.keys(blockImages).length > 0
-  const block = useBlocks(blockImages)
-
-  const layout = useMemo(() => {
-    const { gameHeight, gameWidth, padding } = config
-    const contentHeight = ACTIONS_BAR_HEIGHT + DIVIDER_HEIGHT + gameHeight
-    const contentTop = Math.max(
-      insets.top,
-      (screenHeight - insets.top - insets.bottom - contentHeight) / 2 +
-        insets.top
-    )
-    const gameAreaY = contentTop + ACTIONS_BAR_HEIGHT + DIVIDER_HEIGHT
-    const gameAreaX = (screenWidth - gameWidth) / 2
-    return {
-      contentTop,
-      gameAreaX,
-      gameAreaY,
-      actionsBarLeft: padding,
-      actionsBarWidth: screenWidth - padding * 2
-    }
-  }, [config, screenWidth, screenHeight, insets])
-
-  const onComplete = useCallback(
-    (updated?: PathSegment[][]) => {
-      engine.onGestureComplete(updated)
-    },
-    [engine]
-  )
-
-  const onOverlayFadeOutComplete = useCallback(() => {
-    engine.signalOverlayFadeOutComplete()
-    callbacksRef.current.onRestart?.()
-  }, [engine])
-
-  const orchestrator = useGestureCompletionOrchestrator({
-    onComplete,
-    onOverlayFadeOutComplete
-  })
-
-  useEngineBridge(engine, shared, {
-    orchestrator,
-    config,
-    onScoreChange: (score) => callbacksRef.current.onScoreChange?.(score),
-    onGameOver: (score) => callbacksRef.current.onGameOver?.(score),
-    onRemovingStart: (p) => callbacksRef.current.onRemovingStart?.(p),
-    onRemovingEnd: (p) => callbacksRef.current.onRemovingEnd?.(p),
-    onFitStart: () => callbacksRef.current.onFitStart?.(),
-    onFitComplete: (p) => callbacksRef.current.onFitComplete?.(p)
-  })
-
-  const hidePauseOverlay = useCallback(() => {
-    isPausedRef.current = false
-    shared.overlay.pauseOpacity.value = withTiming(0, { duration: 200 })
-    callbacksRef.current.onResume?.()
-  }, [shared.overlay.pauseOpacity])
-
   useEffect(() => {
-    imperativeRef.current = {
-      pause: () => {
-        isPausedRef.current = true
-        shared.overlay.pauseOpacity.value = withTiming(1, { duration: 200 })
-        callbacksRef.current.onPause?.()
-      },
-      resume: hidePauseOverlay,
-      restart: () => {
-        engine.restart()
-        isPausedRef.current = false
-        shared.overlay.pauseOpacity.value = withTiming(0, { duration: 200 })
-        callbacksRef.current.onRestart?.()
-      },
-      isPaused: () => isPausedRef.current
-    }
+    imperativeRef.current = gameRoot.getImperativeHandle() as SlidingBlocksHandle
     return () => {
       imperativeRef.current = null
     }
-  }, [engine, hidePauseOverlay, shared.overlay.pauseOpacity, imperativeRef])
-
-  const handleTapOrRestart = useCallback(
-    (x: number, y: number): boolean => {
-      if (isPausedRef.current) {
-        const action = hitTestPauseOverlay(
-          x - layout.gameAreaX,
-          y - layout.gameAreaY,
-          showFinishOption,
-          config.gameWidth,
-          config.gameHeight
-        )
-        if (action === 'resume') {
-          hidePauseOverlay()
-          return true
-        }
-        if (action === 'restart') {
-          engine.restart()
-          hidePauseOverlay()
-          callbacksRef.current.onRestart?.()
-          return true
-        }
-        if (action === 'finish') {
-          callbacksRef.current.onFinish?.()
-          hidePauseOverlay()
-          return true
-        }
-        return true
-      }
-
-      if (hitTestTopPause(x, y, layout)) {
-        isPausedRef.current = true
-        shared.overlay.pauseOpacity.value = withTiming(1, { duration: 200 })
-        callbacksRef.current.onPause?.()
-        return true
-      }
-
-      const gameOver = engine.getGameOver()
-      if (
-        gameOver &&
-        hitTestGameOverRestart(
-          x - layout.gameAreaX,
-          y - layout.gameAreaY,
-          config.gameWidth,
-          config.gameHeight
-        )
-      ) {
-        engine.restart()
-        callbacksRef.current.onRestart?.()
-        return true
-      }
-      return false
-    },
-    [
-      engine,
-      layout,
-      showFinishOption,
-      shared.overlay.pauseOpacity,
-      hidePauseOverlay,
-      config.gameWidth,
-      config.gameHeight
-    ]
-  )
+  }, [gameRoot.getImperativeHandle, imperativeRef])
 
   const contextValue = useMemo(
     () => ({
-      config,
+      config: gameRoot.config,
       settings,
       theme,
       callbacks: {
@@ -273,35 +110,43 @@ function SlidingBlocksDataProvider({
       },
       showFinishOption
     }),
-    [config, settings, theme, callbacks, showFinishOption]
+    [gameRoot.config, settings, theme, callbacks, showFinishOption]
   )
 
   const composableContextValue = useMemo(
     () => ({
-      shared,
-      layout,
-      config,
-      block,
-      hasBlockImages,
-      screenWidth,
-      screenHeight
+      shared: gameRoot.shared,
+      layout: gameRoot.layout,
+      config: gameRoot.config,
+      block: gameRoot.block,
+      hasBlockImages: gameRoot.hasBlockImages,
+      screenWidth: gameRoot.screenWidth,
+      screenHeight: gameRoot.screenHeight
     }),
-    [shared, layout, config, block, hasBlockImages, screenWidth, screenHeight]
+    [
+      gameRoot.shared,
+      gameRoot.layout,
+      gameRoot.config,
+      gameRoot.block,
+      gameRoot.hasBlockImages,
+      gameRoot.screenWidth,
+      gameRoot.screenHeight
+    ]
   )
 
   return (
     <SlidingBlocksProvider value={contextValue}>
       <ComposableSlidingBlocksProvider value={composableContextValue}>
-        <GameGestureViewEngine
-          engine={engine}
-          shared={shared}
-          layout={layout}
-          onTapOrRestart={handleTapOrRestart}
+        <GameRootInner
+          engine={gameRoot.engine}
+          shared={gameRoot.shared}
+          layout={gameRoot.layout}
+          onTapOrRestart={gameRoot.handleTapOrRestart}
           onGestureStart={hookProps.callbacks?.onGestureStart}
           onGestureEnd={hookProps.callbacks?.onGestureEnd}
         >
           {children}
-        </GameGestureViewEngine>
+        </GameRootInner>
       </ComposableSlidingBlocksProvider>
     </SlidingBlocksProvider>
   )

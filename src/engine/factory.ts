@@ -1,6 +1,6 @@
-import type { PathSegment } from './model/types'
 import type { EngineConfig } from './config'
 import type { GameEngineHost } from './host'
+import type { PathSegment } from './model/types'
 import { GameEngine } from './viewmodels/GameEngine'
 
 export type CreateGameEngineOptions = {

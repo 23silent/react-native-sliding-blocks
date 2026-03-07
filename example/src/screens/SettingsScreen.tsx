@@ -9,17 +9,17 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { settingsViewModel } from '../settings'
 import { useSettings } from '../hooks/useSettings'
+import { settingsViewModel } from '../settings'
 import {
+  INPUT_BORDER,
   MENU_BG,
   PANEL_BG,
   RESET_BUTTON_BG,
   RESET_BUTTON_TEXT,
   TEXT_HINT,
   TEXT_PRIMARY,
-  TEXT_SECONDARY,
-  INPUT_BORDER
+  TEXT_SECONDARY
 } from '../theme'
 
 type Props = {
@@ -79,9 +79,12 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
   const insets = useSafeAreaInsets()
   const settings = useSettings()
 
-  const update = useCallback((overrides: Parameters<typeof settingsViewModel.update>[0]) => {
-    settingsViewModel.update(overrides)
-  }, [])
+  const update = useCallback(
+    (overrides: Parameters<typeof settingsViewModel.update>[0]) => {
+      settingsViewModel.update(overrides)
+    },
+    []
+  )
 
   const reset = useCallback(async () => {
     await settingsViewModel.reset()
@@ -124,18 +127,14 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
           <TextInput
             style={[styles.input, styles.inputWide]}
             value={settings.block.borderColor}
-            onChangeText={t =>
-              update({ block: { borderColor: t } })
-            }
+            onChangeText={t => update({ block: { borderColor: t } })}
             placeholder="rgba(r,g,b,a)"
           />
         </SettingRow>
         <SettingRow label="Super gradient steps">
           <NumericInput
             value={settings.block.superGradientSteps}
-            onChange={v =>
-              update({ block: { superGradientSteps: v } })
-            }
+            onChange={v => update({ block: { superGradientSteps: v } })}
             min={2}
             max={50}
           />
@@ -146,9 +145,7 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
         <SettingRow label="Radius">
           <NumericInput
             value={settings.explosion.radius}
-            onChange={v =>
-              update({ explosion: { radius: v } })
-            }
+            onChange={v => update({ explosion: { radius: v } })}
             min={20}
             max={300}
           />
@@ -156,9 +153,7 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
         <SettingRow label="Particle size">
           <NumericInput
             value={settings.explosion.baseParticleSize}
-            onChange={v =>
-              update({ explosion: { baseParticleSize: v } })
-            }
+            onChange={v => update({ explosion: { baseParticleSize: v } })}
             min={4}
             max={48}
           />
@@ -166,9 +161,7 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
         <SettingRow label="Rise height">
           <NumericInput
             value={settings.explosion.riseHeight}
-            onChange={v =>
-              update({ explosion: { riseHeight: v } })
-            }
+            onChange={v => update({ explosion: { riseHeight: v } })}
             min={0}
             max={300}
           />
@@ -176,9 +169,7 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
         <SettingRow label="Fall distance">
           <NumericInput
             value={settings.explosion.fallDistance}
-            onChange={v =>
-              update({ explosion: { fallDistance: v } })
-            }
+            onChange={v => update({ explosion: { fallDistance: v } })}
             min={0}
             max={800}
           />
@@ -264,18 +255,67 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             max={16}
           />
         </SettingRow>
+        <SettingRow label="Performance (low-end)">
+          <View style={styles.performanceModeCol}>
+            <View style={styles.performanceModeRow}>
+              <Pressable
+                style={[
+                  styles.performanceModeButton,
+                  (settings.explosionPresets.performanceMode ?? 'default') ===
+                    'default' && styles.performanceModeButtonActive
+                ]}
+                onPress={() =>
+                  update({
+                    explosionPresets: { performanceMode: 'default' }
+                  })
+                }
+              >
+                <Text
+                  style={[
+                    styles.performanceModeText,
+                    (settings.explosionPresets.performanceMode ?? 'default') ===
+                      'default' && styles.performanceModeTextActive
+                  ]}
+                >
+                  Default
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.performanceModeButton,
+                  settings.explosionPresets.performanceMode === 'low' &&
+                    styles.performanceModeButtonActive
+                ]}
+                onPress={() =>
+                  update({
+                    explosionPresets: { performanceMode: 'low' }
+                  })
+                }
+              >
+                <Text
+                  style={[
+                    styles.performanceModeText,
+                    settings.explosionPresets.performanceMode === 'low' &&
+                      styles.performanceModeTextActive
+                  ]}
+                >
+                  Low
+                </Text>
+              </Pressable>
+            </View>
+            <Text style={styles.performanceModeHint}>
+              Low: fewer particles, circles only.
+            </Text>
+          </View>
+        </SettingRow>
 
         {/* Game layout */}
         <Text style={styles.sectionTitle}>Game Layout</Text>
-        <Text style={styles.hint}>
-          Changes apply on next game start
-        </Text>
+        <Text style={styles.hint}>Changes apply on next game start</Text>
         <SettingRow label="Rows">
           <NumericInput
             value={settings.gameLayout.rowsCount}
-            onChange={v =>
-              update({ gameLayout: { rowsCount: v } })
-            }
+            onChange={v => update({ gameLayout: { rowsCount: v } })}
             min={6}
             max={16}
           />
@@ -283,9 +323,7 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
         <SettingRow label="Columns">
           <NumericInput
             value={settings.gameLayout.columnsCount}
-            onChange={v =>
-              update({ gameLayout: { columnsCount: v } })
-            }
+            onChange={v => update({ gameLayout: { columnsCount: v } })}
             min={4}
             max={12}
           />
@@ -293,9 +331,7 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
         <SettingRow label="Padding">
           <NumericInput
             value={settings.gameLayout.padding}
-            onChange={v =>
-              update({ gameLayout: { padding: v } })
-            }
+            onChange={v => update({ gameLayout: { padding: v } })}
             min={0}
             max={60}
           />
@@ -315,9 +351,7 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
         <SettingRow label="Keys size">
           <NumericInput
             value={settings.gameLayout.keysSize}
-            onChange={v =>
-              update({ gameLayout: { keysSize: v } })
-            }
+            onChange={v => update({ gameLayout: { keysSize: v } })}
             min={24}
             max={80}
           />
@@ -418,5 +452,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: RESET_BUTTON_TEXT,
     fontWeight: '600'
+  },
+  performanceModeCol: {
+    alignItems: 'flex-end'
+  },
+  performanceModeRow: {
+    flexDirection: 'row',
+    gap: 8
+  },
+  performanceModeButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: INPUT_BORDER,
+    backgroundColor: PANEL_BG
+  },
+  performanceModeButtonActive: {
+    borderColor: '#3b82f6',
+    backgroundColor: 'rgba(59,130,246,0.15)'
+  },
+  performanceModeText: {
+    fontSize: 13,
+    color: TEXT_SECONDARY
+  },
+  performanceModeTextActive: {
+    color: '#3b82f6',
+    fontWeight: '600'
+  },
+  performanceModeHint: {
+    fontSize: 11,
+    color: TEXT_HINT,
+    marginTop: 4
   }
 })

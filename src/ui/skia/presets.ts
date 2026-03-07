@@ -6,8 +6,8 @@
  * so presets work with any component that implements the interface.
  */
 
-import type { GestureSlot, GestureSource, HasOpacity } from './types'
 import type { ReactionRule } from './reactionRules'
+import type { GestureSlot, GestureSource, HasOpacity } from './types'
 
 /**
  * When the slot is "active", sync its translateX with the gesture offset.

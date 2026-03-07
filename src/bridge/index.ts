@@ -1,9 +1,8 @@
-export { useEngineBridge } from './useEngineBridge'
-export { useGestureCompletionOrchestrator } from './GestureCompletionOrchestrator'
 export type { GestureCompletionOrchestratorApi } from './GestureCompletionOrchestrator'
-export { useSharedValuesMap } from './useSharedValuesMap'
+export { useGestureCompletionOrchestrator } from './GestureCompletionOrchestrator'
+export { useEngineBridge } from './useEngineBridge'
 export type {
-  SharedValuesMap,
+  ExplosionPoolSlotSharedValues,
   ItemSlotSharedValues,
-  ExplosionPoolSlotSharedValues
-} from './useSharedValuesMap'
+  SharedValuesMap} from './useSharedValuesMap'
+export { useSharedValuesMap } from './useSharedValuesMap'

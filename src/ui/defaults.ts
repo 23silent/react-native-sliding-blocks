@@ -1,4 +1,4 @@
-import type { AppSettings } from '../types'
+import type { AppSettings } from '../types/settings'
 
 /** Default visual settings. No persistence - used when settings prop not provided. */
 export const DEFAULT_SLIDING_BLOCKS_SETTINGS: AppSettings = {
@@ -29,7 +29,8 @@ export const DEFAULT_SLIDING_BLOCKS_SETTINGS: AppSettings = {
   explosionPresets: {
     particleCount: 8,
     trajectoryPresetCount: 8,
-    shapePresetCount: 8
+    shapePresetCount: 8,
+    performanceMode: 'default' as const
   },
   gameLayout: {
     rowsCount: 10,

@@ -50,7 +50,7 @@ export class GestureCoordinator {
     private readonly root: IRootForGesture,
     private readonly config: GestureCoordinatorConfig
   ) {
-    const { cellSize, columnsCount } = config
+    const { cellSize, columnsCount: _columnsCount } = config
 
     this.onChangeTranslateX$ = this.translateX$.asObservable()
     this.gestureBounds$ = this.gestureBoundsSubject$.asObservable()

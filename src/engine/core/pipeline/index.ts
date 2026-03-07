@@ -1,5 +1,4 @@
 export {
-  runPipeline,
   createPipeline,
-  type PipelineMiddleware
-} from './runPipeline'
+  type PipelineMiddleware,
+  runPipeline} from './runPipeline'

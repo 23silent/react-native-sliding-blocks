@@ -1,18 +1,24 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
-
 import {
-  useSlidingBlocks,
-  useComposableSlidingBlocksContext,
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  View
+} from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import {
+  cancelIdle,
   PreloaderOverlay,
   scheduleIdle,
-  cancelIdle
+  useComposableSlidingBlocksContext,
+  useSlidingBlocks
 } from 'react-native-sliding-blocks'
-import { SLIDING_BLOCKS_ASSETS } from '../assets/slidingBlocksAssets'
-import { POST_LOAD_DELAY_MS, SLIDING_BLOCKS_THEME } from '../theme'
-import { useSettings } from '../hooks/useSettings'
 import SoundPlayer from 'react-native-sound-player'
+
+import { SLIDING_BLOCKS_ASSETS } from '../assets/slidingBlocksAssets'
+import { useSettings } from '../hooks/useSettings'
+import { POST_LOAD_DELAY_MS, SLIDING_BLOCKS_THEME } from '../theme'
 
 type Props = {
   onMenuPress: () => void
@@ -67,7 +73,9 @@ function ComposableGameAreaWithLayout({
  * Composes Root, ScoreBar, GameArea separately. Each has its own Skia Canvas.
  * Host can add custom UI (e.g. header with pause button) and use the imperative ref.
  */
-export function ComposableGameScreen({ onMenuPress }: Props): React.JSX.Element {
+export function ComposableGameScreen({
+  onMenuPress
+}: Props): React.JSX.Element {
   const insets = useSafeAreaInsets()
   const settings = useSettings()
   const [progress, setProgress] = useState(0)
@@ -103,7 +111,12 @@ export function ComposableGameScreen({ onMenuPress }: Props): React.JSX.Element 
     []
   )
 
-  const { Root, ScoreBar, GameArea, ref: gameRef } = useSlidingBlocks({
+  const {
+    Root,
+    ScoreBar,
+    GameArea,
+    ref: gameRef
+  } = useSlidingBlocks({
     config: settings.gameLayout,
     assets: SLIDING_BLOCKS_ASSETS,
     theme: SLIDING_BLOCKS_THEME,

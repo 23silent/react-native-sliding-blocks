@@ -5,20 +5,16 @@
  * Use createGameEngine() and connect via your bridge (e.g. useEngineBridge).
  */
 
+export type { EngineConfig } from './config'
+export { createGameEngine, type CreateGameEngineOptions } from './factory'
+export type { GameEngineHost } from './host'
+export { ANIM } from './model/animConsts'
+export type {
+  ActiveItem,
+  BlockMap,
+  ItemsMap,
+  PathSegment,
+  PathSegmentExt} from './model/types'
+export { isIdleSlot,SegmentState } from './model/types'
 export { GameEngine, type IGameEngine } from './viewmodels/GameEngine'
 export type { CompleteEndResult, GestureBounds } from './viewmodels/GestureCoordinator'
-export { createGameEngine, type CreateGameEngineOptions } from './factory'
-export type { EngineConfig } from './config'
-export type { GameEngineHost } from './host'
-export {
-  SegmentState,
-  isIdleSlot
-} from './model/types'
-export type {
-  PathSegment,
-  PathSegmentExt,
-  ActiveItem,
-  ItemsMap,
-  BlockMap
-} from './model/types'
-export { ANIM } from './model/animConsts'

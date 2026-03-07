@@ -1,7 +1,5 @@
 import type { SlidingBlocksAssets } from 'react-native-sliding-blocks'
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-
 /**
  * Default assets for SlidingBlocks. Host injects these; react-native-sliding-blocks has no bundled assets.
  * Omit or pass empty to use fallbacks: solid color bg, skia blocks, no sound.

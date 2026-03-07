@@ -1,3 +1,4 @@
+export type { BlockImageSlot } from './components'
 export {
   BlockImage,
   CheckerboardGrid,
@@ -7,9 +8,13 @@ export {
   SkiaLabel,
   SkiaOverlay
 } from './components'
-export type { BlockImageSlot } from './components'
-export { ReactiveSlot } from './ReactiveSlot'
+export {
+  activeGestureSync,
+  fadeWhenInactive,
+  syncValue
+} from './presets'
 export type { ReactionRule } from './reactionRules'
+export { ReactiveSlot } from './ReactiveSlot'
 export type {
   GestureSlot,
   GestureSource,
@@ -18,10 +23,5 @@ export type {
   SharedBoolean,
   SharedNumber
 } from './types'
-export {
-  activeGestureSync,
-  fadeWhenInactive,
-  syncValue
-} from './presets'
 export { useReactionRule, useReactionRules } from './useReactionRules'
 export { withReaction } from './withReaction'

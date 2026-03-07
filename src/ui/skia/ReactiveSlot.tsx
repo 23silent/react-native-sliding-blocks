@@ -32,6 +32,7 @@ export function ReactiveSlot<P>({
   reactions,
   children
 }: ReactiveSlotProps<P>): React.JSX.Element {
+  /* eslint-disable react-hooks/rules-of-hooks -- mutually exclusive branches; only one runs */
   if (reactions && reactions.length > 0) {
     useReactionRules(reactions)
   } else if (reaction) {

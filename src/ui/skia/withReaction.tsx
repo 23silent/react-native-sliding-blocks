@@ -27,6 +27,7 @@ export function withReaction<P extends object>(
 ): ComponentType<P> {
   function WithReaction(props: P) {
     const ruleOrRules = getRuleOrRules(props)
+    /* eslint-disable react-hooks/rules-of-hooks -- mutually exclusive branches; only one runs */
     if (Array.isArray(ruleOrRules)) {
       useReactionRules(ruleOrRules)
     } else {

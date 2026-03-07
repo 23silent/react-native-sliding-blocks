@@ -90,7 +90,7 @@ All-in-one component. Pass config, callbacks, and optional assets/theme.
 | `callbacks` | `SlidingBlocksCallbacks` | Score, game over, pause, restart, sound hooks, etc. |
 | `assets` | `SlidingBlocksAssets` | Block PNGs, background image. Omit for Skia fallbacks |
 | `theme` | `Partial<SlidingBlocksTheme>` | Overlay, score bar, block colors |
-| `settings` | `SlidingBlocksSettingsOverrides` | Block radius, explosion, checkerboard |
+| `settings` | `SlidingBlocksSettingsOverrides` | Block radius, explosion, checkerboard. Use `explosionPresets.performanceMode: 'low'` for smoother explosions on low-end Android. |
 | `engine` | `IGameEngine` | Optional pre-created engine |
 | `blockRenderMode` | `'skia' \| 'image'` | `'skia'` = draw blocks (default), `'image'` = PNG assets |
 | `showFinishOption` | `boolean` | Show "Finish" in pause overlay; use with `onFinish` |
@@ -148,7 +148,7 @@ For fully custom layouts, use `useComposableSlidingBlocksContext()` inside `Root
 
 - **`GameRootView`** — Minimal wrapper when you need full control over layout and bridge.
 - **`createGameEngine(config, host?)`** — Create a React-agnostic engine for headless testing or custom integration.
-- **`PreloaderOverlay`**, **`scheduleIdle`**, **`cancelIdle`**, **`GESTURE_SENSITIVITY`**, **`layoutConsts`** — Exported for advanced use.
+- **`PreloaderOverlay`**, **`scheduleIdle`**, **`cancelIdle`**, **`GESTURE_SENSITIVITY`**, **layout constants** (TOP_PAUSE, SCORE_BAR, etc.) — Exported for advanced use.
 
 ---
 
@@ -240,11 +240,13 @@ An example app lives in `example/`—it shows the declarative and composable API
 ```bash
 # From repo root
 yarn install
-yarn example          # Install example deps
-yarn example:start    # Start Metro
-yarn example:ios      # Run iOS
-yarn example:android  # Run Android
+yarn example              # Install example deps
+yarn example:start        # Start Metro
+yarn example:ios          # Run iOS (in another terminal)
+yarn example:android      # Run Android (in another terminal)
 ```
+
+**Developing the library?** The example uses a Babel alias so changes in `src/` trigger hot reload. See [DEVELOPMENT.md](DEVELOPMENT.md).
 
 Requires [React Native environment setup](https://reactnative.dev/docs/environment-setup).
 
@@ -257,6 +259,7 @@ Requires [React Native environment setup](https://reactnative.dev/docs/environme
 | `yarn lint` | Lint library source |
 | `yarn example` | Install example dependencies |
 | `yarn example:start` | Start Metro |
+| `yarn example:start:dev` | Start Metro with `--reset-cache` (use if changes don't appear) |
 | `yarn example:ios` | Run on iOS |
 | `yarn example:android` | Run on Android |
 

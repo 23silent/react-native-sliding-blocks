@@ -6,9 +6,9 @@
  */
 import { firstValueFrom } from 'rxjs'
 
-import { createGameEngine } from '..'
 import { computeGameConfig, toEngineConfig } from '../../config'
-import type { GameLayoutSettings } from '../../types'
+import type { GameLayoutSettings } from '../../types/settings'
+import { createGameEngine } from '..'
 
 jest.mock('react-native-sound-player', () => ({
   loadSoundFile: jest.fn(),

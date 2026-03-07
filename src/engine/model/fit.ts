@@ -30,7 +30,7 @@ const findContainingGap = (gaps: Gap[], item: PathSegment): number => {
   let right = gaps.length - 1
 
   while (left <= right) {
-    const mid = (left + right) >> 1
+    const mid = Math.floor((left + right) / 2)
     const gap = gaps[mid]
 
     if (item.end <= gap.start) {

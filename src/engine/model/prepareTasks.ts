@@ -1,3 +1,4 @@
+import { rowsToItemsMap } from './transform'
 import {
   isIdleSlot,
   PathSegment,
@@ -5,7 +6,6 @@ import {
   SegmentState,
   TaskQueueItem
 } from './types'
-import { rowsToItemsMap } from './transform'
 
 const assignItemsToSlots = (
   itemsMap: Record<string, PathSegmentExt>,
@@ -16,7 +16,7 @@ const assignItemsToSlots = (
   const newItems = { ...prevState }
   const idToKey = new Map<string, string>()
   const orderedKeys = Object.keys(newItems).sort(
-    (a, b) => parseInt(a) - parseInt(b)
+    (a, b) => parseInt(a, 10) - parseInt(b, 10)
   )
 
   for (const [key, item] of Object.entries(newItems)) {

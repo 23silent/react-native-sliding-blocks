@@ -32,7 +32,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   explosionPresets: {
     particleCount: 8,
     trajectoryPresetCount: 8,
-    shapePresetCount: 8
+    shapePresetCount: 8,
+    performanceMode: 'default' as const
   },
   gameLayout: {
     rowsCount: 10,

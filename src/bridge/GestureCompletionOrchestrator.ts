@@ -1,8 +1,7 @@
-import { useRef, useCallback } from 'react'
+import { useCallback,useRef } from 'react'
 
+import type { CompleteEndResult,PathSegment } from '../engine'
 import { createPipeline } from '../engine/core/pipeline'
-import type { PathSegment } from '../engine'
-import type { CompleteEndResult } from '../engine'
 
 /**
  * Orchestrates gesture-complete flow: pipeline result storage and post-snap middlewares.

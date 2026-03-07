@@ -1,11 +1,11 @@
-import { Panel, SkiaButton, SkiaLabel, SkiaOverlay } from '../skia'
 import React from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
-import { GAME_OVER_OVERLAY } from '../layoutConsts'
-import { fonts } from '../utils/fonts'
-import type { SlidingBlocksTheme } from '../SlidingBlocks.types'
 import type { SharedValuesMap } from '../../bridge'
+import { GAME_OVER_OVERLAY } from '../../constants/layout'
+import { Panel, SkiaButton, SkiaLabel, SkiaOverlay } from '../skia'
+import type { SlidingBlocksTheme } from '../SlidingBlocks.types'
+import { fonts } from '../utils/fonts'
 
 const {
   BOX_WIDTH,

@@ -3,11 +3,12 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  View,
-  useWindowDimensions
+  useWindowDimensions,
+  View
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import type { Route } from '../navigation/types'
 import {
   BUTTON_PRIMARY,
   BUTTON_SECONDARY,
@@ -15,7 +16,6 @@ import {
   MENU_BG,
   TEXT_PRIMARY
 } from '../theme'
-import type { Route } from '../navigation/types'
 
 type Props = {
   onNavigate: (route: Route) => void

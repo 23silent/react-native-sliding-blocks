@@ -1,5 +1,5 @@
-import type { GameLayoutSettings } from './types'
 import type { EngineConfig } from './engine'
+import type { GameLayoutSettings } from './types/settings'
 
 export type GameConfig = {
   rowsCount: number

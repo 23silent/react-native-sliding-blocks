@@ -3,7 +3,7 @@
  * All values are plain data for worklet compatibility.
  */
 
-import type { ExplosionPresetsSettings } from '../../types'
+import type { ExplosionPresetsSettings } from '../../types/settings'
 
 /** Seeded pseudo-random for deterministic presets */
 function seeded(seed: number): () => number {
@@ -45,12 +45,15 @@ function buildTrajectoryPreset(
 
 function buildShapePreset(
   seedBase: number,
-  particleCount: number
+  particleCount: number,
+  circlesOnly: boolean
 ): ShapeParticle[] {
   const r = seeded(seedBase)
   const particles: ShapeParticle[] = []
   for (let i = 0; i < particleCount; i++) {
-    const shape = Math.floor(r() * 4) as 0 | 1 | 2 | 3
+    const shape = circlesOnly
+      ? (0 as const)
+      : (Math.floor(r() * 4) as 0 | 1 | 2 | 3)
     const sizeMult = 0.5 + r() * 1.2
     const rotation = r() * Math.PI * 2
     particles.push({ shape, sizeMult, rotation })
@@ -68,19 +71,29 @@ export type ExplosionPresets = {
 export function buildExplosionPresets(
   config: ExplosionPresetsSettings
 ): ExplosionPresets {
-  const { particleCount, trajectoryPresetCount, shapePresetCount } = config
+  const {
+    particleCount,
+    trajectoryPresetCount,
+    shapePresetCount,
+    performanceMode = 'default'
+  } = config
+  const circlesOnly = performanceMode === 'low'
+  const effectiveParticleCount = circlesOnly
+    ? Math.max(4, Math.ceil(particleCount / 2))
+    : particleCount
+
   const trajectoryPresets = Array.from(
     { length: trajectoryPresetCount },
-    (_, i) => buildTrajectoryPreset(1000 + i * 7919, particleCount)
+    (_, i) => buildTrajectoryPreset(1000 + i * 7919, effectiveParticleCount)
   )
   const shapePresets = Array.from(
     { length: shapePresetCount },
-    (_, i) => buildShapePreset(2000 + i * 7919, particleCount)
+    (_, i) => buildShapePreset(2000 + i * 7919, effectiveParticleCount, circlesOnly)
   )
   return {
     trajectoryPresets,
     shapePresets,
-    particleCount,
+    particleCount: effectiveParticleCount,
     presetCount: Math.max(trajectoryPresetCount, shapePresetCount)
   }
 }

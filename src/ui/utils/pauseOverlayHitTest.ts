@@ -1,4 +1,4 @@
-import { PAUSE_OVERLAY } from '../layoutConsts'
+import { PAUSE_OVERLAY } from '../../constants/layout'
 
 const { BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_GAP, FIRST_BUTTON_TOP } =
   PAUSE_OVERLAY
@@ -12,7 +12,7 @@ export function hitTestPauseOverlay(
   gameWidth: number,
   gameHeight: number
 ): PauseOverlayAction | null {
-  const boxLeft = (gameWidth - PAUSE_OVERLAY.BOX_WIDTH) / 2
+  const _boxLeft = (gameWidth - PAUSE_OVERLAY.BOX_WIDTH) / 2
   const boxTop = (gameHeight - PAUSE_OVERLAY.BOX_HEIGHT) / 2
   const buttonLeft = (gameWidth - BUTTON_WIDTH) / 2
 

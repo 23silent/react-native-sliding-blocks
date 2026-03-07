@@ -3,7 +3,7 @@ import React, { createContext, useContext } from 'react'
 import type { SharedValuesMap } from '../bridge'
 import type { GameConfig } from '../config'
 import type { BlockMap } from '../engine'
-import type { GameLayout } from './GameCanvas'
+import type { GameLayout } from '../types/layout'
 
 export type ComposableSlidingBlocksContextValue = {
   shared: SharedValuesMap

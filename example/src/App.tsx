@@ -1,17 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { BackHandler } from 'react-native'
+import { BackHandler, StyleSheet } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { CanvasErrorBoundary } from './components/CanvasErrorBoundary'
 import type { Route } from './navigation/types'
-import { settingsViewModel } from './settings'
 import { ComposableGameScreen } from './screens/ComposableGameScreen'
 import { GameScreen } from './screens/GameScreen'
 import { HomeScreen } from './screens/HomeScreen'
 import { ScoreBoardScreen } from './screens/ScoreBoardScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { SplashScreen } from './screens/SplashScreen'
+import { settingsViewModel } from './settings'
 
 function App(): React.JSX.Element {
   const [route, setRoute] = useState<Route>('splash')
@@ -38,29 +38,25 @@ function App(): React.JSX.Element {
   }, [route])
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <CanvasErrorBoundary>
           {route === 'splash' && <SplashScreen />}
-          {route === 'home' && (
-            <HomeScreen onNavigate={setRoute} />
-          )}
-          {route === 'game' && (
-            <GameScreen onMenuPress={goHome} />
-          )}
+          {route === 'home' && <HomeScreen onNavigate={setRoute} />}
+          {route === 'game' && <GameScreen onMenuPress={goHome} />}
           {route === 'composable-game' && (
             <ComposableGameScreen onMenuPress={goHome} />
           )}
-          {route === 'settings' && (
-            <SettingsScreen onBack={goHome} />
-          )}
-          {route === 'scoreboard' && (
-            <ScoreBoardScreen onBack={goHome} />
-          )}
+          {route === 'settings' && <SettingsScreen onBack={goHome} />}
+          {route === 'scoreboard' && <ScoreBoardScreen onBack={goHome} />}
         </CanvasErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   )
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 }
+})
 
 export default App

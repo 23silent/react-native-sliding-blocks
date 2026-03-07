@@ -1,8 +1,8 @@
 import React from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
-import { PositionedRect } from '../skia'
 import type { SharedValuesMap } from '../../bridge'
+import { PositionedRect } from '../skia'
 
 type Props = {
   indicator: SharedValuesMap['indicator']

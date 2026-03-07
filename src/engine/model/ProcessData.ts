@@ -1,12 +1,12 @@
+import { fit } from './fit'
+import { generateSegmentsWithGaps } from './generate'
+import { remove } from './remove'
 import type {
   PathSegment,
   ProcessJobResult,
   ProcessorState,
   ProcessorStep
 } from './types'
-import { fit } from './fit'
-import { generateSegmentsWithGaps } from './generate'
-import { remove } from './remove'
 
 export type ProcessDataConfig = {
   rowsCount: number
@@ -30,7 +30,7 @@ export class ProcessData {
 
   public processJob = (): ProcessJobResult => {
     const state = this.state
-    const { columnsCount, rowsCount } = this.config
+    const { columnsCount } = this.config
 
     switch (state.step) {
       case 'gesture': {

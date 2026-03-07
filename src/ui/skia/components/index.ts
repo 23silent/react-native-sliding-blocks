@@ -1,5 +1,5 @@
-export { BlockImage } from './BlockImage'
 export type { BlockImageSlot } from './BlockImage'
+export { BlockImage } from './BlockImage'
 export { CheckerboardGrid } from './CheckerboardGrid'
 export { Panel } from './Panel'
 export { PositionedRect } from './PositionedRect'

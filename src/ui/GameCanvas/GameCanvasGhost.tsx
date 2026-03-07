@@ -1,10 +1,10 @@
 import React from 'react'
 
-import { BlockImage } from '../skia'
-import type { BlockMap } from '../../engine'
-import type { BlockSettings } from '../../types'
-import type { BlockTheme } from '../SlidingBlocks.types'
 import type { SharedValuesMap } from '../../bridge'
+import type { BlockMap } from '../../engine'
+import type { BlockSettings } from '../../types/settings'
+import { BlockImage } from '../skia'
+import type { BlockTheme } from '../SlidingBlocks.types'
 
 type Props = {
   ghost: SharedValuesMap['ghost']

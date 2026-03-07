@@ -1,4 +1,4 @@
-import { TOP_PAUSE } from '../layoutConsts'
+import { TOP_PAUSE } from '../../constants/layout'
 
 export type TopPauseLayout = {
   contentTop: number

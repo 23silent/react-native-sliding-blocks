@@ -1,4 +1,4 @@
-import { GAME_OVER_OVERLAY } from '../layoutConsts'
+import { GAME_OVER_OVERLAY } from '../../constants/layout'
 
 const { BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_TOP_OFFSET } = GAME_OVER_OVERLAY
 

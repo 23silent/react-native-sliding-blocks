@@ -1,4 +1,4 @@
-import type { AppSettings, GameLayoutSettings } from './types'
+import type { GameLayoutSettings } from './types'
 
 export type GameConfig = {
   rowsCount: number

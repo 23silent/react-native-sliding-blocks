@@ -2,8 +2,10 @@ import { Group, Picture, Skia } from '@shopify/react-native-skia'
 import React, { memo, useMemo } from 'react'
 import { useDerivedValue } from 'react-native-reanimated'
 
-import type { ExplosionSettings, ExplosionPresetsSettings } from '../../types'
 import type { ExplosionPoolSlotSharedValues } from '../../bridge'
+import type {
+  ExplosionPresetsSettings,
+  ExplosionSettings} from '../../types/settings'
 import { buildExplosionPresets } from './explosionPresets'
 
 type Props = {
@@ -28,7 +30,8 @@ export const GameCanvasExplosion = memo(function GameCanvasExplosion({
     [
       presetsConfig.particleCount,
       presetsConfig.trajectoryPresetCount,
-      presetsConfig.shapePresetCount
+      presetsConfig.shapePresetCount,
+      presetsConfig.performanceMode
     ]
   )
 

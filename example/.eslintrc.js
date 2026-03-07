@@ -4,6 +4,17 @@ module.exports = {
     plugins: ['@typescript-eslint', 'prettier', 'unused-imports', 'simple-import-sort'],
     overrides: [
         {
+            files: ['metro.config.js', 'babel.config.js'],
+            rules: {
+                '@typescript-eslint/no-var-requires': 'off',
+                '@typescript-eslint/no-require-imports': 'off'
+            }
+        },
+        {
+            files: ['src/assets/**/*.ts', 'src/screens/ComposableGameScreen.tsx'],
+            rules: { '@typescript-eslint/no-require-imports': 'off' }
+        },
+        {
             files: ['*.ts', '*.tsx'],
             rules: {
                 'prettier/prettier': ['error'],

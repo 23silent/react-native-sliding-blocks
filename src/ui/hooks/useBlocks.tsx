@@ -22,6 +22,7 @@ export const useBlocks = (
   blockImages?: BlockImagesMap | null
 ): BlockMap => {
   const block: BlockMap = {} as BlockMap
+  /* eslint-disable react-hooks/rules-of-hooks -- useImage per color; GAME_COLORS is static */
   for (const color of GAME_COLORS) {
     const assets = blockImages?.[color]
     block[color] = [
