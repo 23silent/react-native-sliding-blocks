@@ -27,12 +27,14 @@ SlidingBlocks has **no bundled assets** and **no platform dependencies**. The ho
 | **Block images** | `assets.blockImages` (color → [1x1, 1x2, 1x3, 1x4]) | Skia-drawn blocks |
 | **Background** | `assets.backgroundImage` | Solid color |
 | **Sounds** | Via callbacks: `onRemovingStart` (row clear), `onFitComplete` with `{ hadActualFit }` (slide) | No sound |
-| **Persistence** | `onScoreChange`, `onGameOver`, etc. | None |
+| **Persistence** | `onScoreChange`, `onGameOver`, `onGameStateChange`, `initialState` | None |
 | **Animation/feedback tuning** | `settings.animations` (durations in ms), `settings.feedback` (opacity values) | SDK defaults |
 
 Sound and other side effects are never invoked by the engine. The bridge calls `onRemovingStart` when rows enter removal, and `onFitComplete({ hadActualFit })` when the snap animation finishes—only `hadActualFit: true` when blocks actually moved.
 
 Animation durations (snap, drop, remove fade, game-over overlay, pause overlay, loading bar) and feedback opacities (block idle, ghost, indicator, will-remove pulse) are configurable via `settings.animations` and `settings.feedback`. The bridge and engine use these values instead of hardcoded constants. For a pre-created engine, pass `animOverrides` to `createGameEngine` so step-complete timeouts match the UI animations.
+
+**Game state persistence** — The engine exposes `getGameState()` returning a `GameStateSnapshot` (rows, score, multiplier, layoutVersion, gameOver). The host persists this (e.g. AsyncStorage) and passes it back as `initialState` to resume after app kill. The engine calls `onGameStateChange(state)` when state changes so the host can persist. Use `isSnapshotCompatible(snapshot, config)` before resuming to ensure the saved state matches the current layout.
 
 ---
 
@@ -230,3 +232,17 @@ myPipeline(context)
 - **Configurable durations** — All animation durations (snap, drop, remove, overlay, etc.) and feedback opacities (block, ghost, indicator) come from `settings.animations` and `settings.feedback`, merged with defaults. The bridge receives these from the root and passes them to helpers.
 
 **Reuse:** Use Reanimated `finished` callbacks and `scheduleOnRN` for JS-side logic. Avoid timeouts for sequencing.
+
+---
+
+## 9. Game State Persistence (Host Responsibility)
+
+**Idea:** The engine exposes serializable state. The host persists it and restores on next launch. Persistence storage and logic live in the host app.
+
+**How:**
+- `IGameEngine.getGameState()` returns `GameStateSnapshot` (rows, score, multiplier, layoutVersion, gameOver)
+- `createGameEngine(..., { initialState, onGameStateChange })` — pass `initialState` to restore; `onGameStateChange` is invoked when state changes
+- `SlidingBlocks` accepts `initialState` and `onGameStateChange` props
+- `isSnapshotCompatible(snapshot, config)` validates layout before resume (rowsCount, columnsCount, keysSize must match)
+
+**Reuse:** Host loads state on mount, validates with `isSnapshotCompatible`, passes to engine/SlidingBlocks. Host persists on `onGameStateChange`; typically clears storage when `gameOver: true`.

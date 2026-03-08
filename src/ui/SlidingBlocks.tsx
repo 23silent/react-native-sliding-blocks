@@ -29,7 +29,9 @@ const SlidingBlocksInner = memo(
       blockRenderMode = 'skia',
       showFinishOption = false,
       onLoadProgress,
-      onLoadComplete
+      onLoadComplete,
+      initialState,
+      onGameStateChange
     },
     ref
   ): React.JSX.Element {
@@ -43,7 +45,9 @@ const SlidingBlocksInner = memo(
       assets,
       callbacks,
       showFinishOption,
-      settings
+      settings,
+      initialState,
+      onGameStateChange
     })
 
     const theme = useMemo(

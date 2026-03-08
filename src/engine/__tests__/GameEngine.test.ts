@@ -62,4 +62,30 @@ describe('GameEngine', () => {
     const score = await firstValueFrom(engine.score$)
     expect(typeof score).toBe('number')
   })
+
+  it('getGameState returns serializable snapshot with layoutVersion', () => {
+    const state = engine.getGameState()
+    expect(state).toMatchObject({
+      score: expect.any(Number),
+      multiplier: expect.any(Number),
+      layoutVersion: {
+        rowsCount: 10,
+        columnsCount: 8,
+        keysSize: 48
+      }
+    })
+    expect(Array.isArray(state.rows)).toBe(true)
+    expect(state.gameOver).toBe(false)
+  })
+
+  it('createGameEngine with initialState restores state', () => {
+    const snapshot = engine.getGameState()
+    const restored = createGameEngine(testConfig, undefined, {
+      initialState: snapshot
+    })
+    const restoredState = restored.getGameState()
+    expect(restoredState.score).toBe(snapshot.score)
+    expect(restoredState.multiplier).toBe(snapshot.multiplier)
+    expect(restoredState.rows).toEqual(snapshot.rows)
+  })
 })

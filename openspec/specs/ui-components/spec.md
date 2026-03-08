@@ -48,3 +48,24 @@ The UI SHALL accept optional block images and background image from the host. Wh
 ### Requirement: Configurable settings (animations, feedback)
 
 The UI SHALL accept `settings` that include `animations` (durations in ms) and `feedback` (opacity values). These are merged with defaults and passed through to the bridge and components. PreloaderOverlay SHALL accept optional `fillAnimationDurationMs` for consistency with `settings.animations.loadingBarFillMs`.
+
+### Requirement: Game state persistence (host-provided)
+
+The UI SHALL accept `initialState` (GameStateSnapshot) and `onGameStateChange` for host-side persistence. Persistence storage and logic are the host's responsibility.
+
+#### Scenario: Resume from persisted state
+
+- **WHEN** the host passes `initialState` (from storage) to SlidingBlocks or useSlidingBlocks
+- **THEN** the game resumes from that state instead of starting fresh
+- **AND** `isSnapshotCompatible` is used internally to validate layout before restore
+
+#### Scenario: State change callback
+
+- **WHEN** game state changes (gesture complete, score update, game over)
+- **THEN** `onGameStateChange(state)` is called so the host can persist
+- **AND** the snapshot includes `gameOver` for the host to decide whether to clear storage
+
+#### Scenario: Imperative getGameState
+
+- **WHEN** the host calls `ref.current?.getGameState()` on the SlidingBlocks handle
+- **THEN** it receives the current `GameStateSnapshot` for on-demand persistence (e.g. on pause)

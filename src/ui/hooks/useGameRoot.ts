@@ -14,9 +14,9 @@ import {
 } from '../../bridge'
 import { computeGameConfig, toEngineConfig } from '../../config'
 import { GAME_ROOT } from '../../constants/layout'
-import type { PathSegment } from '../../engine'
+import type { GameStateSnapshot, PathSegment } from '../../engine'
 import type { IGameEngine } from '../../engine'
-import { createGameEngine } from '../../engine'
+import { createGameEngine, isSnapshotCompatible } from '../../engine'
 import type { GameLayout } from '../../types/layout'
 import type { AppSettings, GameLayoutSettings } from '../../types/settings'
 import { mergeSettings } from '../defaults'
@@ -42,6 +42,10 @@ export type UseGameRootOptions = {
   onMenuPress?: () => void
   /** Merged settings (animations, feedback). Uses defaults when omitted. */
   settings?: AppSettings
+  /** Restore from persisted state. Host loads from storage to resume. */
+  initialState?: GameStateSnapshot | null
+  /** Called when state changes. Host should persist. */
+  onGameStateChange?: (state: GameStateSnapshot) => void
 }
 
 export type UseGameRootReturn = {
@@ -61,6 +65,7 @@ export type UseGameRootReturn = {
     resume: () => void
     restart: () => void
     isPaused: () => boolean
+    getGameState: () => GameStateSnapshot
   }
 }
 
@@ -72,7 +77,9 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
     callbacks = {},
     showFinishOption = false,
     onMenuPress,
-    settings: settingsProp
+    settings: settingsProp,
+    initialState,
+    onGameStateChange
   } = options
 
   const settings = useMemo(
@@ -92,16 +99,25 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
   const callbacksRef = useRef(callbacks)
   callbacksRef.current = callbacks
 
-  const [engine] = useState(() =>
-    engineProp ??
-    createGameEngine(toEngineConfig(config), undefined, {
+  const [engine] = useState(() => {
+    if (engineProp) return engineProp
+    const engineConfig = toEngineConfig(config)
+    const validInitialState =
+      initialState &&
+      !initialState.gameOver &&
+      isSnapshotCompatible(initialState, engineConfig)
+        ? initialState
+        : undefined
+    return createGameEngine(engineConfig, undefined, {
       onRowAdded: (row) => callbacksRef.current.onRowAdded?.(row),
       animOverrides: {
         removeFadeMs: settings.animations.removeFadeMs,
         itemDropMs: settings.animations.itemDropMs
-      }
+      },
+      initialState: validInitialState,
+      onGameStateChange
     })
-  )
+  })
 
   const shared = useSharedValuesMap(config)
   const blockImages = assets?.blockImages
@@ -252,7 +268,8 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
         })
         callbacksRef.current.onRestart?.()
       },
-      isPaused: () => isPausedRef.current
+      isPaused: () => isPausedRef.current,
+      getGameState: () => engine.getGameState()
     }),
     [engine, hidePauseOverlay, shared.overlay.pauseOpacity, pauseOverlayDuration]
   )

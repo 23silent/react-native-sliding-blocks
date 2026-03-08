@@ -32,6 +32,10 @@ The system SHALL allow users to drag blocks horizontally. When a row is complete
 
 The system SHALL invoke host callbacks for score change, game over, pause, restart, sound hooks, and related events. The host SHALL provide these callbacks; the library SHALL never invoke platform APIs directly.
 
+### Requirement: Game state persistence (host responsibility)
+
+The system SHALL expose serializable game state (`GameStateSnapshot`) for persistence. The host SHALL be responsible for storage (e.g. AsyncStorage), load/save logic, and resume flow. The library SHALL provide `getGameState()`, `initialState` prop, `onGameStateChange` callback, and `isSnapshotCompatible(snapshot, config)` for layout validation.
+
 #### Scenario: Score and game over
 
 - **WHEN** a row is cleared

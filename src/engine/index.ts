@@ -12,6 +12,11 @@ export {
   type CreateGameEngineOptions
 } from './factory'
 export type { GameEngineHost } from './host'
+export {
+  getLayoutVersion,
+  isSnapshotCompatible,
+  type GameStateSnapshot
+} from './state'
 export { ANIM } from './model/animConsts'
 export type {
   ActiveItem,

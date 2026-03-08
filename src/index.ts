@@ -13,6 +13,11 @@ export {
   type GameEngineHost,
   type IGameEngine
 } from './engine'
+export {
+  getLayoutVersion,
+  isSnapshotCompatible,
+  type GameStateSnapshot
+} from './engine'
 export type {
   AnimationSettings,
   FeedbackOpacitySettings

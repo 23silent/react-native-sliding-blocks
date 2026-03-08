@@ -60,7 +60,9 @@ function SlidingBlocksDataProvider({
     blockRenderMode: _blockRenderMode = 'skia',
     showFinishOption = false,
     onLoadProgress: _onLoadProgress,
-    onLoadComplete: _onLoadComplete
+    onLoadComplete: _onLoadComplete,
+    initialState,
+    onGameStateChange
   } = hookProps
 
   const settings = useMemo(
@@ -73,7 +75,9 @@ function SlidingBlocksDataProvider({
     assets,
     callbacks,
     showFinishOption,
-    settings
+    settings,
+    initialState,
+    onGameStateChange
   })
 
   const theme = useMemo(

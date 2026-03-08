@@ -3,6 +3,7 @@ import { Subject } from 'rxjs'
 
 import type { EngineConfig } from '../config'
 import type { GameEngineHost } from '../host'
+import type { GameStateSnapshot } from '../state'
 import type { ActiveItem, PathSegment, PathSegmentExt } from '../model/types'
 import { GameViewModel } from './GameViewModel'
 import { type CompleteEndResult, type GestureBounds,GestureCoordinator } from './GestureCoordinator'
@@ -26,6 +27,8 @@ export interface IGameEngine {
   removeItem(key: string): void
   getGameOver(): { score: number } | null
   getRows(): PathSegment[][]
+  /** Returns serializable state for host to persist. Pass back as initialState to resume. */
+  getGameState(): GameStateSnapshot
   setGestureContainerLayout(layout: { x: number; y: number }): void
   onGestureBegin(payload: { absoluteX: number; absoluteY: number }): void
   onGestureEnd(currentTranslateX: number): void
@@ -61,6 +64,8 @@ export class GameEngine implements IGameEngine {
     options?: {
       onRowAdded?: (row: PathSegment[]) => void
       animOverrides?: { removeFadeMs?: number; itemDropMs?: number }
+      initialState?: GameStateSnapshot
+      onGameStateChange?: (state: GameStateSnapshot) => void
     }
   ) {
     this.stepComplete$ = this.stepCompleteSubject$.asObservable()
@@ -70,7 +75,11 @@ export class GameEngine implements IGameEngine {
       this.overlayFadeOutCompleteSubject$.asObservable(),
       host,
       options?.onRowAdded,
-      options?.animOverrides
+      options?.animOverrides,
+      {
+        initialState: options?.initialState,
+        onGameStateChange: options?.onGameStateChange
+      }
     )
     this.gesture = new GestureCoordinator(this.game, {
       cellSize: config.cellSize,
@@ -117,6 +126,10 @@ export class GameEngine implements IGameEngine {
 
   getRows(): PathSegment[][] {
     return this.game.getRows()
+  }
+
+  getGameState(): GameStateSnapshot {
+    return this.game.getState()
   }
 
   setGestureContainerLayout(layout: { x: number; y: number }): void {

@@ -56,3 +56,25 @@ The engine SHALL NOT invoke sound, analytics, or other host-side effects. All si
 ### Requirement: Configurable step-complete timeouts
 
 The engine SHALL accept optional `animOverrides` in `createGameEngine` options (`removeFadeMs`, `itemDropMs`). These override the default animation durations used for step-complete timeout fallbacks so they match the bridge's animation durations.
+
+### Requirement: Game state snapshot and resume
+
+The engine SHALL expose serializable game state for host-side persistence and resume after app kill.
+
+#### Scenario: Get game state
+
+- **WHEN** the host calls `engine.getGameState()`
+- **THEN** it receives a `GameStateSnapshot` with rows, score, multiplier, layoutVersion, and gameOver
+- **AND** the snapshot is JSON-serializable for storage (e.g. AsyncStorage)
+
+#### Scenario: Resume from persisted state
+
+- **WHEN** the host creates an engine with `createGameEngine(config, host, { initialState: snapshot })`
+- **THEN** the engine restores from the snapshot instead of generating a new board
+- **AND** score, multiplier, and rows match the saved state
+
+#### Scenario: State change notification
+
+- **WHEN** game state changes (gesture complete, score update, game over)
+- **THEN** the engine invokes `onGameStateChange(state)` if provided in options
+- **AND** the host can persist the snapshot for resume on next launch
