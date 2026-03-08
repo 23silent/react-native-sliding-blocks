@@ -5,6 +5,7 @@
 import type { AppSettings } from './types'
 
 export const DEFAULT_SETTINGS: AppSettings = {
+  blockRenderMode: 'image' as const,
   block: {
     radius: 12,
     borderWidth: 1,
@@ -33,7 +34,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     particleCount: 8,
     trajectoryPresetCount: 8,
     shapePresetCount: 8,
-    performanceMode: 'default' as const
+    circlesOnly: false,
+    explosionEnabled: true
   },
   gameLayout: {
     rowsCount: 10,
@@ -47,6 +49,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     itemDropMs: 200,
     willRemovePulseMs: 80,
     removeFadeMs: 600,
+    removeExplosionMs: 800,
     gameOverInMs: 250,
     gameOverOutMs: 200,
     pauseOverlayMs: 200,

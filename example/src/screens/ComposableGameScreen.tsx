@@ -28,6 +28,7 @@ type Props = {
 /** Wrapper that uses layout from context to position GameArea and add background. */
 function ComposableGameAreaWithLayout({
   GameArea,
+  blockRenderMode,
   onLoadProgress,
   onLoadComplete
 }: {
@@ -37,6 +38,7 @@ function ComposableGameAreaWithLayout({
     onLoadProgress?: (progress: number) => void
     onLoadComplete?: () => void
   }>
+  blockRenderMode: 'skia' | 'image'
   onLoadProgress?: (progress: number) => void
   onLoadComplete?: () => void
 }) {
@@ -59,7 +61,7 @@ function ComposableGameAreaWithLayout({
         ]}
       >
         <GameArea
-          blockRenderMode="skia"
+          blockRenderMode={blockRenderMode}
           showFinishOption
           onLoadProgress={onLoadProgress}
           onLoadComplete={onLoadComplete}
@@ -123,7 +125,7 @@ export function ComposableGameScreen({
     theme: SLIDING_BLOCKS_THEME,
     callbacks: {
       onFinish: onMenuPress,
-      onGameOver: (score) => {
+      onGameOver: score => {
         addScore(score).catch(() => {})
       },
       onRemovingStart: () => {
@@ -151,7 +153,7 @@ export function ComposableGameScreen({
       animations: settings.animations,
       feedback: settings.feedback
     },
-    blockRenderMode: 'skia',
+    blockRenderMode: settings.blockRenderMode,
     showFinishOption: true,
     onLoadProgress,
     onLoadComplete
@@ -187,6 +189,7 @@ export function ComposableGameScreen({
           {/* Background + positioned board - host controls layout */}
           <ComposableGameAreaWithLayout
             GameArea={GameArea}
+            blockRenderMode={settings.blockRenderMode}
             onLoadProgress={onLoadProgress}
             onLoadComplete={onLoadComplete}
           />
@@ -224,22 +227,22 @@ const styles = StyleSheet.create({
     zIndex: 20
   },
   menuButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(59,130,246,0.5)',
-    borderRadius: 8
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    backgroundColor: 'rgba(139,90,43,0.6)',
+    borderRadius: 10
   },
   pauseButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(168,85,247,0.5)',
-    borderRadius: 8
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    backgroundColor: 'rgba(212,163,96,0.35)',
+    borderRadius: 10
   },
   menuButtonPressed: {
-    opacity: 0.8
+    opacity: 0.85
   },
   menuButtonText: {
-    color: 'white',
+    color: '#f5ebe0',
     fontWeight: '600',
     fontSize: 14
   }

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useState } from 'react'
 import {
   Pressable,
   ScrollView,
@@ -10,6 +10,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useSettings } from '../hooks/useSettings'
+import {
+  getActivePreset,
+  getPerformancePresetOverrides,
+  type PerformancePreset
+} from '../settings'
 import { settingsViewModel } from '../settings'
 import {
   INPUT_BORDER,
@@ -43,26 +48,17 @@ function SettingRow({
 
 function NumericInput({
   value,
-  onChange,
-  min,
-  max
+  onChange
 }: {
   value: number
   onChange: (v: number) => void
-  min?: number
-  max?: number
 }) {
   const handleChange = useCallback(
     (text: string) => {
       const n = parseFloat(text)
-      if (!Number.isNaN(n)) {
-        let v = n
-        if (min != null && v < min) v = min
-        if (max != null && v > max) v = max
-        onChange(v)
-      }
+      if (!Number.isNaN(n) && n >= 0) onChange(n)
     },
-    [onChange, min, max]
+    [onChange]
   )
   return (
     <TextInput
@@ -78,6 +74,7 @@ function NumericInput({
 export function SettingsScreen({ onBack }: Props): React.JSX.Element {
   const insets = useSafeAreaInsets()
   const settings = useSettings()
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   const update = useCallback(
     (overrides: Parameters<typeof settingsViewModel.update>[0]) => {
@@ -105,421 +102,498 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Block */}
-        <Text style={styles.sectionTitle}>Block</Text>
-        <SettingRow label="Radius">
-          <NumericInput
-            value={settings.block.radius}
-            onChange={v => update({ block: { radius: v } })}
-            min={1}
-            max={32}
-          />
-        </SettingRow>
-        <SettingRow label="Border width">
-          <NumericInput
-            value={settings.block.borderWidth}
-            onChange={v => update({ block: { borderWidth: v } })}
-            min={0}
-            max={4}
-          />
-        </SettingRow>
-        <SettingRow label="Border color">
-          <TextInput
-            style={[styles.input, styles.inputWide]}
-            value={settings.block.borderColor}
-            onChangeText={t => update({ block: { borderColor: t } })}
-            placeholder="rgba(r,g,b,a)"
-          />
-        </SettingRow>
-        <SettingRow label="Super gradient steps">
-          <NumericInput
-            value={settings.block.superGradientSteps}
-            onChange={v => update({ block: { superGradientSteps: v } })}
-            min={2}
-            max={50}
-          />
-        </SettingRow>
-        <SettingRow label="Frost highlight color">
-          <TextInput
-            style={[styles.input, styles.inputWide]}
-            value={settings.block.frostHighlightColor}
-            onChangeText={t =>
-              update({ block: { frostHighlightColor: t } })
-            }
-            placeholder="rgba(r,g,b,a)"
-          />
-        </SettingRow>
-        <SettingRow label="Frost highlight height ratio">
-          <NumericInput
-            value={settings.block.frostHighlightHeightRatio}
-            onChange={v =>
-              update({ block: { frostHighlightHeightRatio: v } })
-            }
-            min={0}
-            max={1}
-          />
-        </SettingRow>
-
-        {/* Explosion */}
-        <Text style={styles.sectionTitle}>Explosion</Text>
-        <SettingRow label="Radius">
-          <NumericInput
-            value={settings.explosion.radius}
-            onChange={v => update({ explosion: { radius: v } })}
-            min={20}
-            max={300}
-          />
-        </SettingRow>
-        <SettingRow label="Particle size">
-          <NumericInput
-            value={settings.explosion.baseParticleSize}
-            onChange={v => update({ explosion: { baseParticleSize: v } })}
-            min={4}
-            max={48}
-          />
-        </SettingRow>
-        <SettingRow label="Rise height">
-          <NumericInput
-            value={settings.explosion.riseHeight}
-            onChange={v => update({ explosion: { riseHeight: v } })}
-            min={0}
-            max={300}
-          />
-        </SettingRow>
-        <SettingRow label="Fall distance">
-          <NumericInput
-            value={settings.explosion.fallDistance}
-            onChange={v => update({ explosion: { fallDistance: v } })}
-            min={0}
-            max={800}
-          />
-        </SettingRow>
-        <SettingRow label="Picture size">
-          <NumericInput
-            value={settings.explosion.pictureSize}
-            onChange={v => update({ explosion: { pictureSize: v } })}
-            min={100}
-            max={800}
-          />
-        </SettingRow>
-
-        {/* Checkerboard */}
-        <Text style={styles.sectionTitle}>Checkerboard</Text>
-        <SettingRow label="Base color">
-          <TextInput
-            style={[styles.input, styles.inputWide]}
-            value={settings.checkerboard.defaultBaseColor}
-            onChangeText={t =>
-              update({
-                checkerboard: { defaultBaseColor: t }
-              })
-            }
-          />
-        </SettingRow>
-        <SettingRow label="Dark opacity">
-          <NumericInput
-            value={settings.checkerboard.defaultDarkOpacity}
-            onChange={v =>
-              update({
-                checkerboard: { defaultDarkOpacity: v }
-              })
-            }
-            min={0}
-            max={1}
-          />
-        </SettingRow>
-        <SettingRow label="Light opacity">
-          <NumericInput
-            value={settings.checkerboard.defaultLightOpacity}
-            onChange={v =>
-              update({
-                checkerboard: { defaultLightOpacity: v }
-              })
-            }
-            min={0}
-            max={1}
-          />
-        </SettingRow>
-
-        {/* Explosion presets */}
-        <Text style={styles.sectionTitle}>Explosion Presets</Text>
-        <SettingRow label="Particle count">
-          <NumericInput
-            value={settings.explosionPresets.particleCount}
-            onChange={v =>
-              update({
-                explosionPresets: { particleCount: v }
-              })
-            }
-            min={2}
-            max={24}
-          />
-        </SettingRow>
-        <SettingRow label="Trajectory presets">
-          <NumericInput
-            value={settings.explosionPresets.trajectoryPresetCount}
-            onChange={v =>
-              update({
-                explosionPresets: {
-                  trajectoryPresetCount: v
-                }
-              })
-            }
-            min={2}
-            max={16}
-          />
-        </SettingRow>
-        <SettingRow label="Shape presets">
-          <NumericInput
-            value={settings.explosionPresets.shapePresetCount}
-            onChange={v =>
-              update({
-                explosionPresets: {
-                  shapePresetCount: v
-                }
-              })
-            }
-            min={2}
-            max={16}
-          />
-        </SettingRow>
-        <SettingRow label="Performance (low-end)">
-          <View style={styles.performanceModeCol}>
-            <View style={styles.performanceModeRow}>
-              <Pressable
-                style={[
-                  styles.performanceModeButton,
-                  (settings.explosionPresets.performanceMode ?? 'default') ===
-                    'default' && styles.performanceModeButtonActive
-                ]}
-                onPress={() =>
-                  update({
-                    explosionPresets: { performanceMode: 'default' }
-                  })
-                }
-              >
-                <Text
-                  style={[
-                    styles.performanceModeText,
-                    (settings.explosionPresets.performanceMode ?? 'default') ===
-                      'default' && styles.performanceModeTextActive
-                  ]}
-                >
-                  Default
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[
-                  styles.performanceModeButton,
-                  settings.explosionPresets.performanceMode === 'low' &&
-                    styles.performanceModeButtonActive
-                ]}
-                onPress={() =>
-                  update({
-                    explosionPresets: { performanceMode: 'low' }
-                  })
-                }
-              >
-                <Text
-                  style={[
-                    styles.performanceModeText,
-                    settings.explosionPresets.performanceMode === 'low' &&
-                      styles.performanceModeTextActive
-                  ]}
-                >
-                  Low
-                </Text>
-              </Pressable>
-            </View>
-            <Text style={styles.performanceModeHint}>
-              Low: fewer particles, circles only.
-            </Text>
+        {/* Performance presets - main */}
+        <View style={styles.mainSection}>
+          <Text style={styles.sectionTitle}>Performance preset</Text>
+          <Text style={styles.hint}>
+            One-tap presets for block style, explosion, and animations.
+          </Text>
+          <View style={[styles.performanceModeRow, styles.presetRow]}>
+            {(['extra-low', 'low', 'fine', 'good'] as PerformancePreset[]).map(
+              preset => {
+                const isActive = getActivePreset(settings) === preset
+                return (
+                  <Pressable
+                    key={preset}
+                    style={[
+                      styles.presetButton,
+                      isActive && styles.presetButtonActive
+                    ]}
+                    onPress={() =>
+                      update(getPerformancePresetOverrides(preset))
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.presetButtonText,
+                        isActive && styles.presetButtonTextActive
+                      ]}
+                    >
+                      {preset === 'extra-low'
+                        ? 'Extra low'
+                        : preset === 'low'
+                          ? 'Low'
+                          : preset === 'fine'
+                            ? 'Fine'
+                            : 'Good'}
+                    </Text>
+                  </Pressable>
+                )
+              }
+            )}
           </View>
-        </SettingRow>
+          <Text style={styles.performanceModeHint}>
+            Extra low: no animations. Low: no explosion. Fine: explosion mid.
+            Good: explosion full, skia.
+          </Text>
+        </View>
 
-        {/* Animations */}
-        <Text style={styles.sectionTitle}>Animations (ms)</Text>
-        <SettingRow label="Complete snap">
-          <NumericInput
-            value={settings.animations.completeSnapMs}
-            onChange={v =>
-              update({ animations: { completeSnapMs: v } })
-            }
-            min={20}
-            max={200}
-          />
-        </SettingRow>
-        <SettingRow label="Item drop">
-          <NumericInput
-            value={settings.animations.itemDropMs}
-            onChange={v =>
-              update({ animations: { itemDropMs: v } })
-            }
-            min={50}
-            max={600}
-          />
-        </SettingRow>
-        <SettingRow label="Will remove pulse">
-          <NumericInput
-            value={settings.animations.willRemovePulseMs}
-            onChange={v =>
-              update({ animations: { willRemovePulseMs: v } })
-            }
-            min={20}
-            max={200}
-          />
-        </SettingRow>
-        <SettingRow label="Remove fade">
-          <NumericInput
-            value={settings.animations.removeFadeMs}
-            onChange={v =>
-              update({ animations: { removeFadeMs: v } })
-            }
-            min={200}
-            max={1200}
-          />
-        </SettingRow>
-        <SettingRow label="Game over in">
-          <NumericInput
-            value={settings.animations.gameOverInMs}
-            onChange={v =>
-              update({ animations: { gameOverInMs: v } })
-            }
-            min={100}
-            max={600}
-          />
-        </SettingRow>
-        <SettingRow label="Game over out">
-          <NumericInput
-            value={settings.animations.gameOverOutMs}
-            onChange={v =>
-              update({ animations: { gameOverOutMs: v } })
-            }
-            min={100}
-            max={600}
-          />
-        </SettingRow>
-        <SettingRow label="Pause overlay">
-          <NumericInput
-            value={settings.animations.pauseOverlayMs}
-            onChange={v =>
-              update({ animations: { pauseOverlayMs: v } })
-            }
-            min={100}
-            max={600}
-          />
-        </SettingRow>
-        <SettingRow label="Loading bar fill">
-          <NumericInput
-            value={settings.animations.loadingBarFillMs}
-            onChange={v =>
-              update({ animations: { loadingBarFillMs: v } })
-            }
-            min={100}
-            max={1000}
-          />
-        </SettingRow>
-
-        {/* Feedback (opacity) */}
-        <Text style={styles.sectionTitle}>Feedback (opacity 0–1)</Text>
-        <SettingRow label="Block idle">
-          <NumericInput
-            value={settings.feedback.blockIdle}
-            onChange={v =>
-              update({ feedback: { blockIdle: v } })
-            }
-            min={0}
-            max={1}
-          />
-        </SettingRow>
-        <SettingRow label="Will remove pulse min">
-          <NumericInput
-            value={settings.feedback.willRemovePulseMin}
-            onChange={v =>
-              update({ feedback: { willRemovePulseMin: v } })
-            }
-            min={0}
-            max={1}
-          />
-        </SettingRow>
-        <SettingRow label="Ghost active">
-          <NumericInput
-            value={settings.feedback.ghostActive}
-            onChange={v =>
-              update({ feedback: { ghostActive: v } })
-            }
-            min={0}
-            max={1}
-          />
-        </SettingRow>
-        <SettingRow label="Indicator active">
-          <NumericInput
-            value={settings.feedback.indicatorActive}
-            onChange={v =>
-              update({ feedback: { indicatorActive: v } })
-            }
-            min={0}
-            max={1}
-          />
-        </SettingRow>
-
-        {/* Game layout */}
-        <Text style={styles.sectionTitle}>Game Layout</Text>
-        <Text style={styles.hint}>Changes apply on next game start</Text>
-        <SettingRow label="Rows">
-          <NumericInput
-            value={settings.gameLayout.rowsCount}
-            onChange={v => update({ gameLayout: { rowsCount: v } })}
-            min={6}
-            max={16}
-          />
-        </SettingRow>
-        <SettingRow label="Columns">
-          <NumericInput
-            value={settings.gameLayout.columnsCount}
-            onChange={v => update({ gameLayout: { columnsCount: v } })}
-            min={4}
-            max={12}
-          />
-        </SettingRow>
-        <SettingRow label="Padding">
-          <NumericInput
-            value={settings.gameLayout.padding}
-            onChange={v => update({ gameLayout: { padding: v } })}
-            min={0}
-            max={60}
-          />
-        </SettingRow>
-        <SettingRow label="Explosion pool size">
-          <NumericInput
-            value={settings.gameLayout.explosionPoolSize}
-            onChange={v =>
-              update({
-                gameLayout: { explosionPoolSize: v }
-              })
-            }
-            min={4}
-            max={32}
-          />
-        </SettingRow>
-        <SettingRow label="Keys size">
-          <NumericInput
-            value={settings.gameLayout.keysSize}
-            onChange={v => update({ gameLayout: { keysSize: v } })}
-            min={24}
-            max={80}
-          />
-        </SettingRow>
-
+        {/* Advanced toggle */}
         <Pressable
           style={({ pressed }) => [
-            styles.resetButton,
+            styles.advancedButton,
             pressed && styles.pressed
           ]}
-          onPress={reset}
+          onPress={() => setShowAdvanced(v => !v)}
         >
-          <Text style={styles.resetText}>Reset to defaults</Text>
+          <Text style={styles.advancedButtonText}>
+            {showAdvanced ? '− Hide custom settings' : '+ Custom settings'}
+          </Text>
         </Pressable>
+
+        {showAdvanced && (
+          <>
+            {/* Block render mode */}
+            <Text style={styles.sectionTitle}>Block style</Text>
+            <SettingRow label="Rendering">
+              <View style={styles.performanceModeRow}>
+                <Pressable
+                  style={[
+                    styles.performanceModeButton,
+                    settings.blockRenderMode === 'image' &&
+                      styles.performanceModeButtonActive
+                  ]}
+                  onPress={() => update({ blockRenderMode: 'image' })}
+                >
+                  <Text
+                    style={[
+                      styles.performanceModeText,
+                      settings.blockRenderMode === 'image' &&
+                        styles.performanceModeTextActive
+                    ]}
+                  >
+                    Image
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.performanceModeButton,
+                    settings.blockRenderMode === 'skia' &&
+                      styles.performanceModeButtonActive
+                  ]}
+                  onPress={() => update({ blockRenderMode: 'skia' })}
+                >
+                  <Text
+                    style={[
+                      styles.performanceModeText,
+                      settings.blockRenderMode === 'skia' &&
+                        styles.performanceModeTextActive
+                    ]}
+                  >
+                    Skia
+                  </Text>
+                </Pressable>
+              </View>
+            </SettingRow>
+            <Text style={styles.hint}>
+              Image: PNG assets. Skia: drawn blocks (no assets).
+            </Text>
+
+            {/* Block */}
+            <Text style={styles.sectionTitle}>Block</Text>
+            <SettingRow label="Radius">
+              <NumericInput
+                value={settings.block.radius}
+                onChange={v => update({ block: { radius: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Border width">
+              <NumericInput
+                value={settings.block.borderWidth}
+                onChange={v => update({ block: { borderWidth: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Border color">
+              <TextInput
+                style={[styles.input, styles.inputWide]}
+                value={settings.block.borderColor}
+                onChangeText={t => update({ block: { borderColor: t } })}
+                placeholder="rgba(r,g,b,a)"
+              />
+            </SettingRow>
+            <SettingRow label="Super gradient steps">
+              <NumericInput
+                value={settings.block.superGradientSteps}
+                onChange={v => update({ block: { superGradientSteps: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Frost highlight color">
+              <TextInput
+                style={[styles.input, styles.inputWide]}
+                value={settings.block.frostHighlightColor}
+                onChangeText={t =>
+                  update({ block: { frostHighlightColor: t } })
+                }
+                placeholder="rgba(r,g,b,a)"
+              />
+            </SettingRow>
+            <SettingRow label="Frost highlight height ratio">
+              <NumericInput
+                value={settings.block.frostHighlightHeightRatio}
+                onChange={v =>
+                  update({ block: { frostHighlightHeightRatio: v } })
+                }
+              />
+            </SettingRow>
+
+            {/* Explosion */}
+            <Text style={styles.sectionTitle}>Explosion</Text>
+            <SettingRow label="Explosion enabled">
+              <View style={styles.performanceModeRow}>
+                <Pressable
+                  style={[
+                    styles.performanceModeButton,
+                    settings.explosionPresets.explosionEnabled !== false &&
+                      styles.performanceModeButtonActive
+                  ]}
+                  onPress={() =>
+                    update({
+                      explosionPresets: { explosionEnabled: true }
+                    })
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.performanceModeText,
+                      settings.explosionPresets.explosionEnabled !== false &&
+                        styles.performanceModeTextActive
+                    ]}
+                  >
+                    On
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.performanceModeButton,
+                    settings.explosionPresets.explosionEnabled === false &&
+                      styles.performanceModeButtonActive
+                  ]}
+                  onPress={() =>
+                    update({
+                      explosionPresets: { explosionEnabled: false }
+                    })
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.performanceModeText,
+                      settings.explosionPresets.explosionEnabled === false &&
+                        styles.performanceModeTextActive
+                    ]}
+                  >
+                    Off
+                  </Text>
+                </Pressable>
+              </View>
+            </SettingRow>
+            <SettingRow label="Radius">
+              <NumericInput
+                value={settings.explosion.radius}
+                onChange={v => update({ explosion: { radius: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Particle size">
+              <NumericInput
+                value={settings.explosion.baseParticleSize}
+                onChange={v => update({ explosion: { baseParticleSize: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Rise height">
+              <NumericInput
+                value={settings.explosion.riseHeight}
+                onChange={v => update({ explosion: { riseHeight: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Fall distance">
+              <NumericInput
+                value={settings.explosion.fallDistance}
+                onChange={v => update({ explosion: { fallDistance: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Picture size">
+              <NumericInput
+                value={settings.explosion.pictureSize}
+                onChange={v => update({ explosion: { pictureSize: v } })}
+              />
+            </SettingRow>
+
+            {/* Checkerboard */}
+            <Text style={styles.sectionTitle}>Checkerboard</Text>
+            <SettingRow label="Base color">
+              <TextInput
+                style={[styles.input, styles.inputWide]}
+                value={settings.checkerboard.defaultBaseColor}
+                onChangeText={t =>
+                  update({
+                    checkerboard: { defaultBaseColor: t }
+                  })
+                }
+              />
+            </SettingRow>
+            <SettingRow label="Dark opacity">
+              <NumericInput
+                value={settings.checkerboard.defaultDarkOpacity}
+                onChange={v =>
+                  update({
+                    checkerboard: { defaultDarkOpacity: v }
+                  })
+                }
+              />
+            </SettingRow>
+            <SettingRow label="Light opacity">
+              <NumericInput
+                value={settings.checkerboard.defaultLightOpacity}
+                onChange={v =>
+                  update({
+                    checkerboard: { defaultLightOpacity: v }
+                  })
+                }
+              />
+            </SettingRow>
+
+            {/* Explosion presets */}
+            <Text style={styles.sectionTitle}>Explosion Presets</Text>
+            <SettingRow label="Particle count">
+              <NumericInput
+                value={settings.explosionPresets.particleCount}
+                onChange={v =>
+                  update({
+                    explosionPresets: { particleCount: v }
+                  })
+                }
+              />
+            </SettingRow>
+            <SettingRow label="Trajectory presets">
+              <NumericInput
+                value={settings.explosionPresets.trajectoryPresetCount}
+                onChange={v =>
+                  update({
+                    explosionPresets: {
+                      trajectoryPresetCount: v
+                    }
+                  })
+                }
+              />
+            </SettingRow>
+            <SettingRow label="Shape presets">
+              <NumericInput
+                value={settings.explosionPresets.shapePresetCount}
+                onChange={v =>
+                  update({
+                    explosionPresets: {
+                      shapePresetCount: v
+                    }
+                  })
+                }
+              />
+            </SettingRow>
+            <SettingRow label="Circles only">
+              <View style={styles.performanceModeCol}>
+                <View style={styles.performanceModeRow}>
+                  <Pressable
+                    style={[
+                      styles.performanceModeButton,
+                      settings.explosionPresets.circlesOnly !== true &&
+                        styles.performanceModeButtonActive
+                    ]}
+                    onPress={() =>
+                      update({
+                        explosionPresets: { circlesOnly: false }
+                      })
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.performanceModeText,
+                        settings.explosionPresets.circlesOnly !== true &&
+                          styles.performanceModeTextActive
+                      ]}
+                    >
+                      Mixed shapes
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={[
+                      styles.performanceModeButton,
+                      settings.explosionPresets.circlesOnly === true &&
+                        styles.performanceModeButtonActive
+                    ]}
+                    onPress={() =>
+                      update({
+                        explosionPresets: { circlesOnly: true }
+                      })
+                    }
+                  >
+                    <Text
+                      style={[
+                        styles.performanceModeText,
+                        settings.explosionPresets.circlesOnly === true &&
+                          styles.performanceModeTextActive
+                      ]}
+                    >
+                      Circles only
+                    </Text>
+                  </Pressable>
+                </View>
+                <Text style={styles.performanceModeHint}>
+                  Circles only: faster on low-end devices.
+                </Text>
+              </View>
+            </SettingRow>
+
+            {/* Animations */}
+            <Text style={styles.sectionTitle}>Animations (ms)</Text>
+            <SettingRow label="Complete snap">
+              <NumericInput
+                value={settings.animations.completeSnapMs}
+                onChange={v => update({ animations: { completeSnapMs: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Item drop">
+              <NumericInput
+                value={settings.animations.itemDropMs}
+                onChange={v => update({ animations: { itemDropMs: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Will remove pulse">
+              <NumericInput
+                value={settings.animations.willRemovePulseMs}
+                onChange={v => update({ animations: { willRemovePulseMs: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Remove fade (block opacity)">
+              <NumericInput
+                value={settings.animations.removeFadeMs}
+                onChange={v => update({ animations: { removeFadeMs: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Remove explosion (particles)">
+              <NumericInput
+                value={settings.animations.removeExplosionMs}
+                onChange={v => update({ animations: { removeExplosionMs: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Game over in">
+              <NumericInput
+                value={settings.animations.gameOverInMs}
+                onChange={v => update({ animations: { gameOverInMs: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Game over out">
+              <NumericInput
+                value={settings.animations.gameOverOutMs}
+                onChange={v => update({ animations: { gameOverOutMs: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Pause overlay">
+              <NumericInput
+                value={settings.animations.pauseOverlayMs}
+                onChange={v => update({ animations: { pauseOverlayMs: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Loading bar fill">
+              <NumericInput
+                value={settings.animations.loadingBarFillMs}
+                onChange={v => update({ animations: { loadingBarFillMs: v } })}
+              />
+            </SettingRow>
+
+            {/* Feedback (opacity) */}
+            <Text style={styles.sectionTitle}>Feedback (opacity 0–1)</Text>
+            <SettingRow label="Block idle">
+              <NumericInput
+                value={settings.feedback.blockIdle}
+                onChange={v => update({ feedback: { blockIdle: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Will remove pulse min">
+              <NumericInput
+                value={settings.feedback.willRemovePulseMin}
+                onChange={v => update({ feedback: { willRemovePulseMin: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Ghost active">
+              <NumericInput
+                value={settings.feedback.ghostActive}
+                onChange={v => update({ feedback: { ghostActive: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Indicator active">
+              <NumericInput
+                value={settings.feedback.indicatorActive}
+                onChange={v => update({ feedback: { indicatorActive: v } })}
+              />
+            </SettingRow>
+
+            {/* Game layout */}
+            <Text style={styles.sectionTitle}>Game Layout</Text>
+            <Text style={styles.hint}>Changes apply on next game start</Text>
+            <SettingRow label="Rows">
+              <NumericInput
+                value={settings.gameLayout.rowsCount}
+                onChange={v => update({ gameLayout: { rowsCount: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Columns">
+              <NumericInput
+                value={settings.gameLayout.columnsCount}
+                onChange={v => update({ gameLayout: { columnsCount: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Padding">
+              <NumericInput
+                value={settings.gameLayout.padding}
+                onChange={v => update({ gameLayout: { padding: v } })}
+              />
+            </SettingRow>
+            <SettingRow label="Explosion pool size">
+              <NumericInput
+                value={settings.gameLayout.explosionPoolSize}
+                onChange={v =>
+                  update({
+                    gameLayout: { explosionPoolSize: v }
+                  })
+                }
+              />
+            </SettingRow>
+            <SettingRow label="Keys size">
+              <NumericInput
+                value={settings.gameLayout.keysSize}
+                onChange={v => update({ gameLayout: { keysSize: v } })}
+              />
+            </SettingRow>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.resetButton,
+                pressed && styles.pressed
+              ]}
+              onPress={reset}
+            >
+              <Text style={styles.resetText}>Reset to defaults</Text>
+            </Pressable>
+          </>
+        )}
       </ScrollView>
     </View>
   )
@@ -607,12 +681,52 @@ const styles = StyleSheet.create({
     color: RESET_BUTTON_TEXT,
     fontWeight: '600'
   },
+  mainSection: {
+    marginBottom: 20
+  },
   performanceModeCol: {
     alignItems: 'flex-end'
   },
   performanceModeRow: {
     flexDirection: 'row',
     gap: 8
+  },
+  presetRow: {
+    flexWrap: 'wrap',
+    gap: 10
+  },
+  presetButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: PANEL_BG,
+    borderWidth: 1,
+    borderColor: INPUT_BORDER
+  },
+  presetButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: TEXT_PRIMARY
+  },
+  presetButtonActive: {
+    borderColor: 'rgba(212,163,96,0.9)',
+    backgroundColor: 'rgba(212,163,96,0.15)'
+  },
+  presetButtonTextActive: {
+    color: 'rgba(212,163,96,0.95)'
+  },
+  advancedButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: PANEL_BG,
+    borderWidth: 1,
+    borderColor: INPUT_BORDER,
+    marginBottom: 20
+  },
+  advancedButtonText: {
+    fontSize: 15,
+    color: TEXT_SECONDARY
   },
   performanceModeButton: {
     paddingVertical: 8,
@@ -623,15 +737,15 @@ const styles = StyleSheet.create({
     backgroundColor: PANEL_BG
   },
   performanceModeButtonActive: {
-    borderColor: '#3b82f6',
-    backgroundColor: 'rgba(59,130,246,0.15)'
+    borderColor: 'rgba(212,163,96,0.9)',
+    backgroundColor: 'rgba(212,163,96,0.15)'
   },
   performanceModeText: {
     fontSize: 13,
     color: TEXT_SECONDARY
   },
   performanceModeTextActive: {
-    color: '#3b82f6',
+    color: 'rgba(212,163,96,0.95)',
     fontWeight: '600'
   },
   performanceModeHint: {

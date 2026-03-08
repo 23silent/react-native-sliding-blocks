@@ -35,8 +35,10 @@ export type ExplosionPresetsSettings = {
   particleCount: number
   trajectoryPresetCount: number
   shapePresetCount: number
-  /** 'low' = fewer particles, circles only - smoother on low-end Android */
-  performanceMode?: 'default' | 'low'
+  /** When true, use circles only (faster). */
+  circlesOnly?: boolean
+  /** When false, explosion particles are not rendered. */
+  explosionEnabled?: boolean
 }
 
 /** Game layout consts */
@@ -54,11 +56,15 @@ export type AnimationSettings = {
   itemDropMs: number
   willRemovePulseMs: number
   removeFadeMs: number
+  removeExplosionMs: number
   gameOverInMs: number
   gameOverOutMs: number
   pauseOverlayMs: number
   loadingBarFillMs: number
 }
+
+/** Block render mode: image (PNG assets) or skia (drawn blocks) */
+export type BlockRenderMode = 'image' | 'skia'
 
 /** Opacity values for visual feedback */
 export type FeedbackOpacitySettings = {
@@ -69,6 +75,7 @@ export type FeedbackOpacitySettings = {
 }
 
 export type AppSettings = {
+  blockRenderMode: BlockRenderMode
   block: BlockSettings
   explosion: ExplosionSettings
   checkerboard: CheckerboardSettings
@@ -80,6 +87,7 @@ export type AppSettings = {
 
 /** Partial overrides for merging with defaults */
 export type AppSettingsOverrides = {
+  blockRenderMode?: BlockRenderMode
   block?: Partial<BlockSettings>
   explosion?: Partial<ExplosionSettings>
   checkerboard?: Partial<CheckerboardSettings>
