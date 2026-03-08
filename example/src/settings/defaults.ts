@@ -41,5 +41,21 @@ export const DEFAULT_SETTINGS: AppSettings = {
     padding: 30,
     explosionPoolSize: 16,
     keysSize: 48
+  },
+  animations: {
+    completeSnapMs: 50,
+    itemDropMs: 200,
+    willRemovePulseMs: 80,
+    removeFadeMs: 600,
+    gameOverInMs: 250,
+    gameOverOutMs: 200,
+    pauseOverlayMs: 200,
+    loadingBarFillMs: 400
+  },
+  feedback: {
+    blockIdle: 0.8,
+    willRemovePulseMin: 0.85,
+    ghostActive: 0.4,
+    indicatorActive: 0.1
   }
 }

@@ -43,7 +43,12 @@ function App(): React.JSX.Element {
         <CanvasErrorBoundary>
           {route === 'splash' && <SplashScreen />}
           {route === 'home' && <HomeScreen onNavigate={setRoute} />}
-          {route === 'game' && <GameScreen onMenuPress={goHome} />}
+          {(route === 'game' || route === 'game-resume') && (
+            <GameScreen
+              onMenuPress={goHome}
+              shouldResume={route === 'game-resume'}
+            />
+          )}
           {route === 'composable-game' && (
             <ComposableGameScreen onMenuPress={goHome} />
           )}

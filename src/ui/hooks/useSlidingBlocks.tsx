@@ -60,21 +60,25 @@ function SlidingBlocksDataProvider({
     blockRenderMode: _blockRenderMode = 'skia',
     showFinishOption = false,
     onLoadProgress: _onLoadProgress,
-    onLoadComplete: _onLoadComplete
+    onLoadComplete: _onLoadComplete,
+    initialState,
+    onGameStateChange
   } = hookProps
-
-  const gameRoot = useGameRoot({
-    layoutConfig,
-    engine: engineProp,
-    assets,
-    callbacks,
-    showFinishOption
-  })
 
   const settings = useMemo(
     () => mergeSettings(settingsOverrides),
     [settingsOverrides]
   )
+  const gameRoot = useGameRoot({
+    layoutConfig,
+    engine: engineProp,
+    assets,
+    callbacks,
+    showFinishOption,
+    settings,
+    initialState,
+    onGameStateChange
+  })
 
   const theme = useMemo(
     () => mergeTheme(DEFAULT_SLIDING_BLOCKS_THEME, themeOverrides),

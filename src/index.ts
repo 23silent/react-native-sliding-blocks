@@ -7,10 +7,21 @@ export { GESTURE_SENSITIVITY } from './constants/game'
 export * from './constants/layout'
 export * from './engine'
 export {
+  type AnimOverrides,
   createGameEngine,
   type EngineConfig,
   type GameEngineHost,
-  type IGameEngine} from './engine'
+  type IGameEngine
+} from './engine'
+export {
+  getLayoutVersion,
+  isSnapshotCompatible,
+  type GameStateSnapshot
+} from './engine'
+export type {
+  AnimationSettings,
+  FeedbackOpacitySettings
+} from './types/settings'
 export {
   type ComposableSlidingBlocksContextValue,
   useComposableSlidingBlocksContext} from './ui/ComposableSlidingBlocksContext'
@@ -35,4 +46,4 @@ export type {
   SlidingBlocksProps,
   SlidingBlocksSettingsOverrides,
   SlidingBlocksTheme} from './ui/SlidingBlocks.types'
-export { cancelIdle,scheduleIdle } from './ui/utils/scheduleIdle'
+export { cancelIdle, scheduleIdle } from './ui/utils/scheduleIdle'

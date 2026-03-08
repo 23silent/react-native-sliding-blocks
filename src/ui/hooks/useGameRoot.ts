@@ -6,7 +6,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useWindowDimensions } from 'react-native'
 import { withTiming } from 'react-native-reanimated'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import {
   useEngineBridge,
@@ -15,11 +14,12 @@ import {
 } from '../../bridge'
 import { computeGameConfig, toEngineConfig } from '../../config'
 import { GAME_ROOT } from '../../constants/layout'
-import type { PathSegment } from '../../engine'
+import type { GameStateSnapshot, PathSegment } from '../../engine'
 import type { IGameEngine } from '../../engine'
-import { createGameEngine } from '../../engine'
+import { createGameEngine, isSnapshotCompatible } from '../../engine'
 import type { GameLayout } from '../../types/layout'
-import type { GameLayoutSettings } from '../../types/settings'
+import type { AppSettings, GameLayoutSettings } from '../../types/settings'
+import { mergeSettings } from '../defaults'
 import type {
   SlidingBlocksAssets,
   SlidingBlocksCallbacks
@@ -31,6 +31,8 @@ import { useBlocks } from './useBlocks'
 
 const { ACTIONS_BAR_HEIGHT, DIVIDER_HEIGHT } = GAME_ROOT
 
+const ZERO_INSETS = { top: 0, bottom: 0, left: 0, right: 0 }
+
 export type UseGameRootOptions = {
   layoutConfig: GameLayoutSettings
   engine?: IGameEngine
@@ -38,6 +40,12 @@ export type UseGameRootOptions = {
   callbacks?: SlidingBlocksCallbacks
   showFinishOption?: boolean
   onMenuPress?: () => void
+  /** Merged settings (animations, feedback). Uses defaults when omitted. */
+  settings?: AppSettings
+  /** Restore from persisted state. Host loads from storage to resume. */
+  initialState?: GameStateSnapshot | null
+  /** Called when state changes. Host should persist. */
+  onGameStateChange?: (state: GameStateSnapshot) => void
 }
 
 export type UseGameRootReturn = {
@@ -57,6 +65,7 @@ export type UseGameRootReturn = {
     resume: () => void
     restart: () => void
     isPaused: () => boolean
+    getGameState: () => GameStateSnapshot
   }
 }
 
@@ -67,12 +76,20 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
     assets,
     callbacks = {},
     showFinishOption = false,
-    onMenuPress
+    onMenuPress,
+    settings: settingsProp,
+    initialState,
+    onGameStateChange
   } = options
 
+  const settings = useMemo(
+    () => settingsProp ?? mergeSettings(),
+    [settingsProp]
+  )
   const { width: screenWidth, height: screenHeight } = useWindowDimensions()
-  const insets = useSafeAreaInsets()
   const isPausedRef = useRef(false)
+  // Safe area is host responsibility — wrap in SafeAreaView if needed
+  const insets = ZERO_INSETS
 
   const config = useMemo(
     () => computeGameConfig(layoutConfig, screenWidth),
@@ -82,12 +99,25 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
   const callbacksRef = useRef(callbacks)
   callbacksRef.current = callbacks
 
-  const [engine] = useState(() =>
-    engineProp ??
-    createGameEngine(toEngineConfig(config), undefined, {
-      onRowAdded: (row) => callbacksRef.current.onRowAdded?.(row)
+  const [engine] = useState(() => {
+    if (engineProp) return engineProp
+    const engineConfig = toEngineConfig(config)
+    const validInitialState =
+      initialState &&
+      !initialState.gameOver &&
+      isSnapshotCompatible(initialState, engineConfig)
+        ? initialState
+        : undefined
+    return createGameEngine(engineConfig, undefined, {
+      onRowAdded: (row) => callbacksRef.current.onRowAdded?.(row),
+      animOverrides: {
+        removeFadeMs: settings.animations.removeFadeMs,
+        itemDropMs: settings.animations.itemDropMs
+      },
+      initialState: validInitialState,
+      onGameStateChange
     })
-  )
+  })
 
   const shared = useSharedValuesMap(config)
   const blockImages = assets?.blockImages
@@ -133,6 +163,8 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
   useEngineBridge(engine, shared, {
     orchestrator,
     config,
+    animations: settings.animations,
+    feedback: settings.feedback,
     onScoreChange: (score) => callbacksRef.current.onScoreChange?.(score),
     onGameOver: (score) => callbacksRef.current.onGameOver?.(score),
     onRemovingStart: (p) => callbacksRef.current.onRemovingStart?.(p),
@@ -141,11 +173,15 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
     onFitComplete: (p) => callbacksRef.current.onFitComplete?.(p)
   })
 
+  const pauseOverlayDuration = settings.animations.pauseOverlayMs
+
   const hidePauseOverlay = useCallback(() => {
     isPausedRef.current = false
-    shared.overlay.pauseOpacity.value = withTiming(0, { duration: 200 })
+    shared.overlay.pauseOpacity.value = withTiming(0, {
+      duration: pauseOverlayDuration
+    })
     callbacksRef.current.onResume?.()
-  }, [shared.overlay.pauseOpacity])
+  }, [shared.overlay.pauseOpacity, pauseOverlayDuration])
 
   const handleTapOrRestart = useCallback(
     (x: number, y: number): boolean => {
@@ -179,7 +215,9 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
 
       if (hitTestTopPause(x, y, layout)) {
         isPausedRef.current = true
-        shared.overlay.pauseOpacity.value = withTiming(1, { duration: 200 })
+        shared.overlay.pauseOpacity.value = withTiming(1, {
+          duration: pauseOverlayDuration
+        })
         callbacksRef.current.onPause?.()
         return true
       }
@@ -216,19 +254,24 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
     () => ({
       pause: () => {
         isPausedRef.current = true
-        shared.overlay.pauseOpacity.value = withTiming(1, { duration: 200 })
+        shared.overlay.pauseOpacity.value = withTiming(1, {
+          duration: pauseOverlayDuration
+        })
         callbacksRef.current.onPause?.()
       },
       resume: hidePauseOverlay,
       restart: () => {
         engine.restart()
         isPausedRef.current = false
-        shared.overlay.pauseOpacity.value = withTiming(0, { duration: 200 })
+        shared.overlay.pauseOpacity.value = withTiming(0, {
+          duration: pauseOverlayDuration
+        })
         callbacksRef.current.onRestart?.()
       },
-      isPaused: () => isPausedRef.current
+      isPaused: () => isPausedRef.current,
+      getGameState: () => engine.getGameState()
     }),
-    [engine, hidePauseOverlay, shared.overlay.pauseOpacity]
+    [engine, hidePauseOverlay, shared.overlay.pauseOpacity, pauseOverlayDuration]
   )
 
   return {

@@ -139,6 +139,26 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             max={50}
           />
         </SettingRow>
+        <SettingRow label="Frost highlight color">
+          <TextInput
+            style={[styles.input, styles.inputWide]}
+            value={settings.block.frostHighlightColor}
+            onChangeText={t =>
+              update({ block: { frostHighlightColor: t } })
+            }
+            placeholder="rgba(r,g,b,a)"
+          />
+        </SettingRow>
+        <SettingRow label="Frost highlight height ratio">
+          <NumericInput
+            value={settings.block.frostHighlightHeightRatio}
+            onChange={v =>
+              update({ block: { frostHighlightHeightRatio: v } })
+            }
+            min={0}
+            max={1}
+          />
+        </SettingRow>
 
         {/* Explosion */}
         <Text style={styles.sectionTitle}>Explosion</Text>
@@ -171,6 +191,14 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
             value={settings.explosion.fallDistance}
             onChange={v => update({ explosion: { fallDistance: v } })}
             min={0}
+            max={800}
+          />
+        </SettingRow>
+        <SettingRow label="Picture size">
+          <NumericInput
+            value={settings.explosion.pictureSize}
+            onChange={v => update({ explosion: { pictureSize: v } })}
+            min={100}
             max={800}
           />
         </SettingRow>
@@ -307,6 +335,132 @@ export function SettingsScreen({ onBack }: Props): React.JSX.Element {
               Low: fewer particles, circles only.
             </Text>
           </View>
+        </SettingRow>
+
+        {/* Animations */}
+        <Text style={styles.sectionTitle}>Animations (ms)</Text>
+        <SettingRow label="Complete snap">
+          <NumericInput
+            value={settings.animations.completeSnapMs}
+            onChange={v =>
+              update({ animations: { completeSnapMs: v } })
+            }
+            min={20}
+            max={200}
+          />
+        </SettingRow>
+        <SettingRow label="Item drop">
+          <NumericInput
+            value={settings.animations.itemDropMs}
+            onChange={v =>
+              update({ animations: { itemDropMs: v } })
+            }
+            min={50}
+            max={600}
+          />
+        </SettingRow>
+        <SettingRow label="Will remove pulse">
+          <NumericInput
+            value={settings.animations.willRemovePulseMs}
+            onChange={v =>
+              update({ animations: { willRemovePulseMs: v } })
+            }
+            min={20}
+            max={200}
+          />
+        </SettingRow>
+        <SettingRow label="Remove fade">
+          <NumericInput
+            value={settings.animations.removeFadeMs}
+            onChange={v =>
+              update({ animations: { removeFadeMs: v } })
+            }
+            min={200}
+            max={1200}
+          />
+        </SettingRow>
+        <SettingRow label="Game over in">
+          <NumericInput
+            value={settings.animations.gameOverInMs}
+            onChange={v =>
+              update({ animations: { gameOverInMs: v } })
+            }
+            min={100}
+            max={600}
+          />
+        </SettingRow>
+        <SettingRow label="Game over out">
+          <NumericInput
+            value={settings.animations.gameOverOutMs}
+            onChange={v =>
+              update({ animations: { gameOverOutMs: v } })
+            }
+            min={100}
+            max={600}
+          />
+        </SettingRow>
+        <SettingRow label="Pause overlay">
+          <NumericInput
+            value={settings.animations.pauseOverlayMs}
+            onChange={v =>
+              update({ animations: { pauseOverlayMs: v } })
+            }
+            min={100}
+            max={600}
+          />
+        </SettingRow>
+        <SettingRow label="Loading bar fill">
+          <NumericInput
+            value={settings.animations.loadingBarFillMs}
+            onChange={v =>
+              update({ animations: { loadingBarFillMs: v } })
+            }
+            min={100}
+            max={1000}
+          />
+        </SettingRow>
+
+        {/* Feedback (opacity) */}
+        <Text style={styles.sectionTitle}>Feedback (opacity 0–1)</Text>
+        <SettingRow label="Block idle">
+          <NumericInput
+            value={settings.feedback.blockIdle}
+            onChange={v =>
+              update({ feedback: { blockIdle: v } })
+            }
+            min={0}
+            max={1}
+          />
+        </SettingRow>
+        <SettingRow label="Will remove pulse min">
+          <NumericInput
+            value={settings.feedback.willRemovePulseMin}
+            onChange={v =>
+              update({ feedback: { willRemovePulseMin: v } })
+            }
+            min={0}
+            max={1}
+          />
+        </SettingRow>
+        <SettingRow label="Ghost active">
+          <NumericInput
+            value={settings.feedback.ghostActive}
+            onChange={v =>
+              update({ feedback: { ghostActive: v } })
+            }
+            min={0}
+            max={1}
+          />
+        </SettingRow>
+        <SettingRow label="Indicator active">
+          <NumericInput
+            value={settings.feedback.indicatorActive}
+            onChange={v =>
+              update({ feedback: { indicatorActive: v } })
+            }
+            min={0}
+            max={1}
+          />
         </SettingRow>
 
         {/* Game layout */}

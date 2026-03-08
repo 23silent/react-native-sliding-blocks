@@ -3,7 +3,9 @@ import { take } from 'rxjs/operators'
 
 import type { EngineConfig } from '../config'
 import type { GameEngineHost } from '../host'
-import { ANIM } from '../model/animConsts'
+import type { GameStateSnapshot } from '../state'
+import { getLayoutVersion } from '../state'
+import { ANIM, type AnimConfig } from '../model/animConsts'
 import { prepareTasks } from '../model/prepareTasks'
 import { ProcessData } from '../model/ProcessData'
 import type {
@@ -46,17 +48,35 @@ export class GameViewModel {
 
   private processData: ProcessData
 
+  private readonly anim: AnimConfig
+  private readonly onRowAdded?: (row: PathSegment[]) => void
+
+  private readonly onGameStateChange?: (state: GameStateSnapshot) => void
+
   constructor(
     private readonly config: EngineConfig,
     private readonly stepComplete$: Observable<void>,
     private readonly overlayFadeOutComplete$: Observable<void>,
-    private readonly host?: GameEngineHost,
-    private readonly onRowAdded?: (row: PathSegment[]) => void
+    host?: GameEngineHost,
+    onRowAdded?: (row: PathSegment[]) => void,
+    animOverrides?: Partial<AnimConfig>,
+    options?: {
+      initialState?: GameStateSnapshot
+      onGameStateChange?: (state: GameStateSnapshot) => void
+    }
   ) {
+    this.anim = {
+      removeFadeMs: animOverrides?.removeFadeMs ?? ANIM.REMOVE_FADE,
+      itemDropMs: animOverrides?.itemDropMs ?? ANIM.ITEM_DROP
+    }
+    this.onRowAdded = onRowAdded
+    this.onGameStateChange = options?.onGameStateChange
     this.keys = config.keys
-    this.items$ = new BehaviorSubject<Partial<Record<string, PathSegmentExt>>>(
-      this.keys.reduce((acc, item) => ({ ...acc, [item]: undefined }), {})
+    const emptyItems = this.keys.reduce<Partial<Record<string, PathSegmentExt>>>(
+      (acc, item) => ({ ...acc, [item]: undefined }),
+      {}
     )
+    this.items$ = new BehaviorSubject(emptyItems)
 
     this.processData = new ProcessData({
       rowsCount: config.rowsCount,
@@ -68,9 +88,33 @@ export class GameViewModel {
     this.gameOver$ = this.gameOverSubject$.asObservable()
     this.onChangeItems$ = this.items$.asObservable()
 
-    this.processData.initializeWithGenerated()
-    this.setBusy(true)
-    this.doProcess()
+    const initialState = options?.initialState
+    if (initialState) {
+      this.processData.initializeWithState(initialState.rows)
+      this.rows = initialState.rows
+      this.scoreSubject$.next(initialState.score)
+      this.multiplierSubject$.next(initialState.multiplier)
+      if (initialState.gameOver) {
+        this.gameOverSubject$.next({ score: initialState.score })
+      }
+      const prepared = prepareTasks(
+        [{ step: 'idle', rows: initialState.rows }],
+        emptyItems,
+        0,
+        config.keysSize
+      )
+      if (prepared.length > 0) {
+        const { newState: newItems, nextOverwriteIndex } = prepared[0]
+        this.nextOverwriteIndex = nextOverwriteIndex
+        this.items$.next(newItems)
+      }
+      this.setBusy(false)
+      this.emitGameStateChange()
+    } else {
+      this.processData.initializeWithGenerated()
+      this.setBusy(true)
+      this.doProcess()
+    }
   }
 
   getGameOver = (): { score: number } | null =>
@@ -79,10 +123,25 @@ export class GameViewModel {
   getRows = (): PathSegment[][] => this.rows
   getBusy = (): boolean => this.busy
 
+  getState = (): GameStateSnapshot => {
+    const gameOver = this.gameOverSubject$.getValue()
+    return {
+      rows: this.rows,
+      score: this.scoreSubject$.getValue(),
+      multiplier: this.multiplierSubject$.getValue(),
+      layoutVersion: getLayoutVersion(this.config),
+      gameOver: gameOver !== null
+    }
+  }
+
+  private emitGameStateChange = (): void => {
+    this.onGameStateChange?.(this.getState())
+  }
+
   private getStepCompleteTimeout(step: string): number {
     return step === 'remove'
-      ? ANIM.REMOVE_FADE + 50
-      : ANIM.ITEM_DROP + 50
+      ? this.anim.removeFadeMs + 50
+      : this.anim.itemDropMs + 50
   }
 
   setBusy = (busy: boolean): void => {
@@ -116,6 +175,7 @@ export class GameViewModel {
       this.rows = r
       this.nextOverwriteIndex = nextOverwriteIndex
       this.items$.next(newState)
+      this.emitGameStateChange()
     }
   }
 
@@ -147,6 +207,7 @@ export class GameViewModel {
     this.processData.initializeWithGenerated()
     this.setBusy(true)
     this.doProcess()
+    this.emitGameStateChange()
   }
 
   private applyTask = async (tasks: ReturnType<typeof prepareTasks>) => {
@@ -178,6 +239,7 @@ export class GameViewModel {
           this.nextOverwriteIndex = nextOverwriteIndex
           this.rows = rows
           this.items$.next(newItems)
+          this.emitGameStateChange()
         },
         onRowAdded: this.onRowAdded
       })
@@ -187,6 +249,7 @@ export class GameViewModel {
     if (this.rows.filter(row => row.length).length === rowsCount) {
       this.gameOverSubject$.next({ score: this.scoreSubject$.getValue() })
       this.setBusy(false)
+      this.emitGameStateChange()
       return
     }
     if (this.applyVersion !== versionAtStart) return
@@ -194,6 +257,7 @@ export class GameViewModel {
     if (!hasRemoves) {
       this.comboStreak = 0
       this.multiplierSubject$.next(1)
+      this.emitGameStateChange()
     }
     if (this.tempRemoveQueue.size) {
       const newItems = { ...this.items$.getValue() }

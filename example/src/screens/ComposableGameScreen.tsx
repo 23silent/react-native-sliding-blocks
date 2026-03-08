@@ -18,6 +18,7 @@ import SoundPlayer from 'react-native-sound-player'
 
 import { SLIDING_BLOCKS_ASSETS } from '../assets/slidingBlocksAssets'
 import { useSettings } from '../hooks/useSettings'
+import { addScore } from '../scoreStore'
 import { POST_LOAD_DELAY_MS, SLIDING_BLOCKS_THEME } from '../theme'
 
 type Props = {
@@ -122,6 +123,9 @@ export function ComposableGameScreen({
     theme: SLIDING_BLOCKS_THEME,
     callbacks: {
       onFinish: onMenuPress,
+      onGameOver: (score) => {
+        addScore(score).catch(() => {})
+      },
       onRemovingStart: () => {
         try {
           SoundPlayer.playSoundFile('big', 'mp3')
@@ -143,7 +147,9 @@ export function ComposableGameScreen({
       block: settings.block,
       explosion: settings.explosion,
       checkerboard: settings.checkerboard,
-      explosionPresets: settings.explosionPresets
+      explosionPresets: settings.explosionPresets,
+      animations: settings.animations,
+      feedback: settings.feedback
     },
     blockRenderMode: 'skia',
     showFinishOption: true,
@@ -191,6 +197,7 @@ export function ComposableGameScreen({
           <PreloaderOverlay
             progress={progress}
             theme={SLIDING_BLOCKS_THEME.loading}
+            fillAnimationDurationMs={settings.animations.loadingBarFillMs}
           />
         </View>
       )}

@@ -29,22 +29,26 @@ const SlidingBlocksInner = memo(
       blockRenderMode = 'skia',
       showFinishOption = false,
       onLoadProgress,
-      onLoadComplete
+      onLoadComplete,
+      initialState,
+      onGameStateChange
     },
     ref
   ): React.JSX.Element {
+    const settings = useMemo(
+      () => mergeSettings(settingsOverrides),
+      [settingsOverrides]
+    )
     const gameRoot = useGameRoot({
       layoutConfig,
       engine,
       assets,
       callbacks,
-      showFinishOption
+      showFinishOption,
+      settings,
+      initialState,
+      onGameStateChange
     })
-
-    const settings = useMemo(
-      () => mergeSettings(settingsOverrides),
-      [settingsOverrides]
-    )
 
     const theme = useMemo(
       () => mergeTheme(DEFAULT_SLIDING_BLOCKS_THEME, themeOverrides),

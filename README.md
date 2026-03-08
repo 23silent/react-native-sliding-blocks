@@ -27,7 +27,6 @@ Install these in your app (they are **peer dependencies**):
 | `react-native-gesture-handler` | Touch and gestures |
 | `react-native-worklets` | UI thread worklets |
 | `rxjs` | Reactive streams |
-| `react-native-safe-area-context` | Safe area insets |
 
 **Requirements:** Node.js ≥ 22.11.0
 
@@ -77,6 +76,8 @@ All-in-one component. Pass config, callbacks, and optional assets/theme.
   theme?: Partial<SlidingBlocksTheme>
   settings?: SlidingBlocksSettingsOverrides
   engine?: IGameEngine
+  initialState?: GameStateSnapshot | null
+  onGameStateChange?: (state: GameStateSnapshot) => void
   blockRenderMode?: 'skia' | 'image'
   showFinishOption?: boolean
   onLoadProgress?: (progress: number) => void
@@ -90,8 +91,10 @@ All-in-one component. Pass config, callbacks, and optional assets/theme.
 | `callbacks` | `SlidingBlocksCallbacks` | Score, game over, pause, restart, sound hooks, etc. |
 | `assets` | `SlidingBlocksAssets` | Block PNGs, background image. Omit for Skia fallbacks |
 | `theme` | `Partial<SlidingBlocksTheme>` | Overlay, score bar, block colors |
-| `settings` | `SlidingBlocksSettingsOverrides` | Block radius, explosion, checkerboard. Use `explosionPresets.performanceMode: 'low'` for smoother explosions on low-end Android. |
+| `settings` | `SlidingBlocksSettingsOverrides` | Block, explosion, checkerboard, explosionPresets, **animations** (durations in ms), **feedback** (opacity values). Use `explosionPresets.performanceMode: 'low'` for smoother explosions on low-end Android. |
 | `engine` | `IGameEngine` | Optional pre-created engine |
+| `initialState` | `GameStateSnapshot \| null` | Restore from persisted state; host loads from storage to resume after app kill |
+| `onGameStateChange` | `(state: GameStateSnapshot) => void` | Called when state changes; host should persist (e.g. AsyncStorage). Snapshot includes `gameOver` flag; host typically clears when game over. |
 | `blockRenderMode` | `'skia' \| 'image'` | `'skia'` = draw blocks (default), `'image'` = PNG assets |
 | `showFinishOption` | `boolean` | Show "Finish" in pause overlay; use with `onFinish` |
 
@@ -107,6 +110,7 @@ ref.current?.pause()
 ref.current?.resume()
 ref.current?.restart()
 ref.current?.isPaused()  // boolean
+ref.current?.getGameState()  // GameStateSnapshot for persistence
 ```
 
 ---
@@ -138,7 +142,7 @@ Returns:
 - `Root` — Wrapper; must wrap `ScoreBar` and `GameArea`
 - `ScoreBar` — Default score bar
 - `GameArea` — Game canvas (blocks, grid, overlays)
-- `ref` — `SlidingBlocksHandle` (pause, resume, restart, isPaused)
+- `ref` — `SlidingBlocksHandle` (pause, resume, restart, isPaused, getGameState)
 
 For fully custom layouts, use `useComposableSlidingBlocksContext()` inside `Root` to access layout and shared values.
 
@@ -147,8 +151,30 @@ For fully custom layouts, use `useComposableSlidingBlocksContext()` inside `Root
 ### Low-level API
 
 - **`GameRootView`** — Minimal wrapper when you need full control over layout and bridge.
-- **`createGameEngine(config, host?)`** — Create a React-agnostic engine for headless testing or custom integration.
-- **`PreloaderOverlay`**, **`scheduleIdle`**, **`cancelIdle`**, **`GESTURE_SENSITIVITY`**, **layout constants** (TOP_PAUSE, SCORE_BAR, etc.) — Exported for advanced use.
+- **`createGameEngine(config, host?, options?)`** — Create a React-agnostic engine for headless testing or custom integration. `options` can include `onRowAdded`, `animOverrides` (`removeFadeMs`, `itemDropMs`), `initialState` (restore from persisted state), and `onGameStateChange` (called when state changes for host persistence).
+- **`GameStateSnapshot`**, **`isSnapshotCompatible(snapshot, config)`**, **`getLayoutVersion(config)`** — Types and helpers for game state persistence. Use `isSnapshotCompatible` before resuming to ensure saved state matches current layout.
+- **`PreloaderOverlay`** — Loading overlay; optional `fillAnimationDurationMs` prop. Use `settings.animations.loadingBarFillMs` for consistency.
+- **`scheduleIdle`**, **`cancelIdle`**, **`GESTURE_SENSITIVITY`**, **layout constants** (TOP_PAUSE, SCORE_BAR, etc.) — Exported for advanced use.
+
+---
+
+## Game State Persistence
+
+The library provides **serializable game state** for host-side persistence. Persistence (e.g. AsyncStorage) is the **host's responsibility**.
+
+| Export | Purpose |
+|--------|---------|
+| `GameStateSnapshot` | Serializable type: `rows`, `score`, `multiplier`, `layoutVersion`, `gameOver` |
+| `getGameState()` | Engine / handle method — returns current state |
+| `initialState` prop | Pass loaded state to resume after app kill |
+| `onGameStateChange` | Callback — persist when state changes; host typically clears when `gameOver: true` |
+| `isSnapshotCompatible(snapshot, config)` | Validate saved state matches current layout before resume |
+
+**Example flow:**
+1. On mount: load from storage → if valid and not game over → pass as `initialState`.
+2. On state change: `onGameStateChange(state)` → persist to storage.
+3. On game over: clear stored state (host decides).
+4. Use `isSnapshotCompatible` so layout changes (e.g. settings) don't corrupt restore.
 
 ---
 
@@ -176,8 +202,8 @@ type SlidingBlocksConfig = {
 | `onRestart` | User restarts (from overlay) |
 | `onFinish` | User taps "Finish" in pause overlay |
 | `onGestureStart` / `onGestureEnd` | Pan starts/ends |
-| `onRemovingStart` / `onRemovingEnd` | Row clear animation starts/ends |
-| `onFitStart` / `onFitComplete` | Slide/snap animation; `onFitComplete({ hadActualFit })` for slide sound |
+| `onRemovingStart` / `onRemovingEnd` | Row clear animation starts/ends; payload `{ hasSuper: boolean }` |
+| `onFitStart` / `onFitComplete` | Slide/snap animation; `onFitComplete({ hadActualFit })` for slide sound (hadActualFit = true when blocks actually moved) |
 | `onRowAdded` | New row added at top |
 
 ### SlidingBlocksAssets
@@ -188,6 +214,19 @@ type SlidingBlocksConfig = {
 | `backgroundImage` | Full-screen background image source |
 
 Omit for fallbacks: solid background, Skia-drawn blocks.
+
+### SlidingBlocksSettingsOverrides
+
+Partial overrides merged with defaults. All optional.
+
+| Category | Fields | Description |
+|----------|--------|-------------|
+| `block` | `radius`, `borderWidth`, `borderColor`, `frostHighlightColor`, `frostHighlightHeightRatio`, `superGradientColors`, `superGradientSteps` | Block appearance |
+| `explosion` | `radius`, `baseParticleSize`, `riseHeight`, `fallDistance`, `pictureSize` | Explosion particles |
+| `checkerboard` | `defaultBaseColor`, `defaultDarkOpacity`, `defaultLightOpacity` | Grid styling |
+| `explosionPresets` | `particleCount`, `trajectoryPresetCount`, `shapePresetCount`, `performanceMode` | Explosion variety; `performanceMode: 'low'` for low-end devices |
+| **`animations`** | `completeSnapMs`, `itemDropMs`, `willRemovePulseMs`, `removeFadeMs`, `gameOverInMs`, `gameOverOutMs`, `pauseOverlayMs`, `loadingBarFillMs` | Animation durations (ms) |
+| **`feedback`** | `blockIdle`, `willRemovePulseMin`, `ghostActive`, `indicatorActive` | Opacity values (0–1) for blocks, ghost, indicator |
 
 ---
 
@@ -223,8 +262,9 @@ react-native-sliding-blocks/
 │   ├── bridge/         # RxJS → SharedValues (useEngineBridge, GestureCompletionOrchestrator)
 │   ├── engine/         # Game logic, RxJS, no React
 │   ├── ui/             # React components, Skia, contexts
+│   ├── constants/      # Layout constants, game config
+│   ├── types/          # Settings, layout types
 │   ├── config.ts
-│   ├── types.ts
 │   ├── CONCEPTS.md     # Architecture guide
 │   └── index.ts
 ├── example/            # Example React Native app
@@ -235,7 +275,7 @@ react-native-sliding-blocks/
 
 ## Example App
 
-An example app lives in `example/`—it shows the declarative and composable APIs, settings, sounds, and themes.
+An example app lives in `example/`—it shows the declarative and composable APIs, settings, sounds, themes, and **game state persistence** (AsyncStorage) with a Resume button when stored state exists.
 
 ```bash
 # From repo root
@@ -246,7 +286,7 @@ yarn example:ios          # Run iOS (in another terminal)
 yarn example:android      # Run Android (in another terminal)
 ```
 
-**Developing the library?** The example uses a Babel alias so changes in `src/` trigger hot reload. See [DEVELOPMENT.md](DEVELOPMENT.md).
+**Developing the library?** The example uses Metro's custom resolver so changes in `src/` trigger hot reload. See [DEVELOPMENT.md](DEVELOPMENT.md).
 
 Requires [React Native environment setup](https://reactnative.dev/docs/environment-setup).
 

@@ -118,4 +118,9 @@ export class ProcessData {
     )
     this.setSegments(initialData)
   }
+
+  /** Restore from persisted state (rows only). Step is set to 'idle'. */
+  public initializeWithState = (rows: PathSegment[][]): void => {
+    this.setSegments(rows, 'idle')
+  }
 }

@@ -24,22 +24,28 @@ type Props = {
   progress: number
   /** Optional theme for loading overlay. Host injects from theme config. */
   theme?: Partial<SlidingBlocksTheme['loading']>
+  /** Optional fill animation duration (ms). Default: 400. Use settings.animations.loadingBarFillMs for consistency. */
+  fillAnimationDurationMs?: number
 }
 
 /**
  * RN-based preloader — renders instantly on first frame (no Skia/Canvas delay).
  * Progress bar animates smoothly so progress changes are clearly visible.
  */
-export function PreloaderOverlay({ progress, theme: themeOverrides }: Props): React.JSX.Element {
+export function PreloaderOverlay({
+  progress,
+  theme: themeOverrides,
+  fillAnimationDurationMs = FILL_ANIMATION_DURATION_MS
+}: Props): React.JSX.Element {
   const fillWidth = useSharedValue(0)
   const loadingTheme = { ...DEFAULT_SLIDING_BLOCKS_THEME.loading, ...themeOverrides }
 
   useEffect(() => {
     const clamped = Math.max(0, Math.min(1, progress))
     fillWidth.value = withTiming(clamped * TRACK_WIDTH, {
-      duration: FILL_ANIMATION_DURATION_MS
+      duration: fillAnimationDurationMs
     })
-  }, [progress, fillWidth])
+  }, [progress, fillWidth, fillAnimationDurationMs])
 
   const fillStyle = useAnimatedStyle(() => ({
     width: fillWidth.value

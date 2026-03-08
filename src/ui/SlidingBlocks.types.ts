@@ -1,11 +1,13 @@
 import type { GameConfig } from '../config'
-import type { IGameEngine, PathSegment } from '../engine'
+import type { GameStateSnapshot, IGameEngine, PathSegment } from '../engine'
 import type {
+  AnimationSettings,
   AppSettings,
   BlockSettings,
   CheckerboardSettings,
   ExplosionPresetsSettings,
   ExplosionSettings,
+  FeedbackOpacitySettings,
   GameLayoutSettings
 } from '../types/settings'
 
@@ -102,6 +104,8 @@ export type SlidingBlocksHandle = {
   restart: () => void
   /** Returns true if the game is currently paused. */
   isPaused: () => boolean
+  /** Returns serializable state for persistence. Same as onGameStateChange payload. */
+  getGameState: () => GameStateSnapshot
 }
 
 /** Payload for remove lifecycle callbacks */
@@ -171,6 +175,8 @@ export type SlidingBlocksSettingsOverrides = {
   explosion?: Partial<ExplosionSettings>
   checkerboard?: Partial<CheckerboardSettings>
   explosionPresets?: Partial<ExplosionPresetsSettings>
+  animations?: Partial<AnimationSettings>
+  feedback?: Partial<FeedbackOpacitySettings>
 }
 
 export type SlidingBlocksProps = {
@@ -178,6 +184,10 @@ export type SlidingBlocksProps = {
   config: SlidingBlocksConfig
   /** Optional pre-created engine. When provided, config must match. Omit to create internally. */
   engine?: IGameEngine
+  /** Restore from persisted state. Host loads from storage and passes here to resume after app kill. */
+  initialState?: GameStateSnapshot | null
+  /** Called when state changes. Host should persist (e.g. AsyncStorage). Snapshot includes gameOver flag; host typically clears when game over. */
+  onGameStateChange?: (state: GameStateSnapshot) => void
   /** Injectable assets (block images, background). Omit for fallbacks: solid bg, skia blocks. */
   assets?: SlidingBlocksAssets
   /** Theme for overlays, loading, score bar. Host injects from theme config. */

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Pressable,
   StyleSheet,
@@ -6,8 +6,11 @@ import {
   useWindowDimensions,
   View
 } from 'react-native'
+import { isSnapshotCompatible } from 'react-native-sliding-blocks'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { loadGameState } from '../gameStateStore'
+import { useSettings } from '../hooks/useSettings'
 import type { Route } from '../navigation/types'
 import {
   BUTTON_PRIMARY,
@@ -24,6 +27,20 @@ type Props = {
 export function HomeScreen({ onNavigate }: Props): React.JSX.Element {
   const { height } = useWindowDimensions()
   const insets = useSafeAreaInsets()
+  const settings = useSettings()
+  const [hasStoredState, setHasStoredState] = useState(false)
+
+  useEffect(() => {
+    loadGameState().then((state) => {
+      setHasStoredState(
+        !!(
+          state &&
+          !state.gameOver &&
+          isSnapshotCompatible(state, settings.gameLayout)
+        )
+      )
+    })
+  }, [settings.gameLayout])
 
   return (
     <View
@@ -34,15 +51,29 @@ export function HomeScreen({ onNavigate }: Props): React.JSX.Element {
     >
       <Text style={styles.title}>Sliding Blocks</Text>
       <View style={[styles.buttons, { marginTop: height * 0.08 }]}>
+        {hasStoredState && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              styles.buttonPrimary,
+              pressed && styles.buttonPressed
+            ]}
+            onPress={() => onNavigate('game-resume')}
+          >
+            <Text style={styles.buttonText}>Resume</Text>
+          </Pressable>
+        )}
         <Pressable
           style={({ pressed }) => [
             styles.button,
-            styles.buttonPrimary,
+            hasStoredState ? styles.buttonSecondary : styles.buttonPrimary,
             pressed && styles.buttonPressed
           ]}
           onPress={() => onNavigate('game')}
         >
-          <Text style={styles.buttonText}>Start Game</Text>
+          <Text style={styles.buttonText}>
+            {hasStoredState ? 'New Game' : 'Start Game'}
+          </Text>
         </Pressable>
         <Pressable
           style={({ pressed }) => [
