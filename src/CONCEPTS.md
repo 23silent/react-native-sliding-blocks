@@ -28,8 +28,11 @@ SlidingBlocks has **no bundled assets** and **no platform dependencies**. The ho
 | **Background** | `assets.backgroundImage` | Solid color |
 | **Sounds** | Via callbacks: `onRemovingStart` (row clear), `onFitComplete` with `{ hadActualFit }` (slide) | No sound |
 | **Persistence** | `onScoreChange`, `onGameOver`, etc. | None |
+| **Animation/feedback tuning** | `settings.animations` (durations in ms), `settings.feedback` (opacity values) | SDK defaults |
 
 Sound and other side effects are never invoked by the engine. The bridge calls `onRemovingStart` when rows enter removal, and `onFitComplete({ hadActualFit })` when the snap animation finishes—only `hadActualFit: true` when blocks actually moved.
+
+Animation durations (snap, drop, remove fade, game-over overlay, pause overlay, loading bar) and feedback opacities (block idle, ghost, indicator, will-remove pulse) are configurable via `settings.animations` and `settings.feedback`. The bridge and engine use these values instead of hardcoded constants. For a pre-created engine, pass `animOverrides` to `createGameEngine` so step-complete timeouts match the UI animations.
 
 ---
 
@@ -224,5 +227,6 @@ myPipeline(context)
 - **Step complete** — Bridge counts pending animations per batch; when the last `withTiming`/`withSequence` `finished` callback fires, it calls `signalStepComplete()`.
 - **Overlay fade-out** — When restarting from game over, score reset waits for `overlayFadeOutComplete$`, which the bridge emits from `withTiming(0, ..., finished => signalOverlayFadeOutComplete)`.
 - **Task pipeline** — Waits for `stepComplete$` (animation-driven). A 3× timer is kept only as a safety fallback.
+- **Configurable durations** — All animation durations (snap, drop, remove, overlay, etc.) and feedback opacities (block, ghost, indicator) come from `settings.animations` and `settings.feedback`, merged with defaults. The bridge receives these from the root and passes them to helpers.
 
 **Reuse:** Use Reanimated `finished` callbacks and `scheduleOnRN` for JS-side logic. Avoid timeouts for sequencing.

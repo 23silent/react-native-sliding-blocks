@@ -8,7 +8,8 @@ import { scheduleOnRN } from 'react-native-worklets'
 
 import type { GameConfig } from '../config'
 import type { PathSegmentExt } from '../engine'
-import { ANIM, SegmentState } from '../engine'
+import { SegmentState } from '../engine'
+import type { AnimationSettings, FeedbackOpacitySettings } from '../types/settings'
 import type {
   ExplosionPoolSlotSharedValues,
   ItemSlotSharedValues,
@@ -24,9 +25,11 @@ export type ItemToStateValue = {
 }
 
 export function createItemToStateValue(
-  config: GameConfig
+  config: GameConfig,
+  feedback: FeedbackOpacitySettings
 ): (item: PathSegmentExt | undefined) => ItemToStateValue {
   const { cellSize, rowsCount } = config
+  const blockIdle = feedback.blockIdle
   const initialStateValue: ItemToStateValue = {
     yValue: rowsCount * cellSize,
     xValue: -1 * cellSize,
@@ -47,7 +50,7 @@ export function createItemToStateValue(
       yValue: item.rowIndex * cellSize,
       xValue: item.start * cellSize,
       widthValue: (item.end - item.start) * cellSize,
-      opacityValue: 0.8,
+      opacityValue: blockIdle,
       colorValue: item.color,
       opacityControlledByAnimation: isRemovingPhase
     }
@@ -65,7 +68,8 @@ export function applySlotBaseUpdates(
   slot: ItemSlotSharedValues,
   st: ItemToStateValue,
   isActiveSlot: boolean,
-  ctx: BatchContext
+  ctx: BatchContext,
+  anim: AnimationSettings
 ): void {
   const { onComplete } = ctx
   ctx.pendingCounter.current += 1
@@ -77,7 +81,7 @@ export function applySlotBaseUpdates(
 
   slot.translateY.value = withTiming(
     st.yValue,
-    { duration: ANIM.ITEM_DROP },
+    { duration: anim.itemDropMs },
     finished => finished && scheduleOnRN(onComplete)
   )
   slot.width.value = st.widthValue
@@ -87,15 +91,17 @@ export function applySlotBaseUpdates(
 
 export function applyWillRemovePulse(
   slot: ItemSlotSharedValues,
-  ctx: BatchContext
+  ctx: BatchContext,
+  anim: AnimationSettings,
+  feedback: FeedbackOpacitySettings
 ): void {
   const { onComplete } = ctx
   ctx.pendingCounter.current += 1
   slot.opacity.value = withSequence(
-    withTiming(0.85, { duration: ANIM.WILL_REMOVE_PULSE }),
+    withTiming(feedback.willRemovePulseMin, { duration: anim.willRemovePulseMs }),
     withTiming(
       1,
-      { duration: ANIM.WILL_REMOVE_PULSE },
+      { duration: anim.willRemovePulseMs },
       finished => finished && scheduleOnRN(onComplete)
     )
   )
@@ -114,6 +120,7 @@ export function applyRemovingAnimation(
   thisBatch: number,
   batchIdRef: RefLike<number>,
   engine: { removeItem: (k: string) => void },
+  anim: AnimationSettings,
   onRemovingEnd?: (payload: { hasSuper: boolean }) => void
 ): void {
   removingHasSuperRef.current = removingHasSuperRef.current || !!item?.super
@@ -145,13 +152,13 @@ export function applyRemovingAnimation(
     poolSlot.color.value = colorVal
     poolSlot.progress.value = 0
     poolSlot.progress.value = withTiming(1, {
-      duration: ANIM.REMOVE_FADE
+      duration: anim.removeFadeMs
     })
   }
 
   slot.opacity.value = withTiming(
     0,
-    { duration: ANIM.REMOVE_FADE },
+    { duration: anim.removeFadeMs },
     finished => finished && scheduleOnRN(onRemoveDone)
   )
 }

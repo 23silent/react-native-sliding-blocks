@@ -33,18 +33,18 @@ const SlidingBlocksInner = memo(
     },
     ref
   ): React.JSX.Element {
+    const settings = useMemo(
+      () => mergeSettings(settingsOverrides),
+      [settingsOverrides]
+    )
     const gameRoot = useGameRoot({
       layoutConfig,
       engine,
       assets,
       callbacks,
-      showFinishOption
+      showFinishOption,
+      settings
     })
-
-    const settings = useMemo(
-      () => mergeSettings(settingsOverrides),
-      [settingsOverrides]
-    )
 
     const theme = useMemo(
       () => mergeTheme(DEFAULT_SLIDING_BLOCKS_THEME, themeOverrides),

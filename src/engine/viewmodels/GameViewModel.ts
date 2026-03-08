@@ -3,7 +3,7 @@ import { take } from 'rxjs/operators'
 
 import type { EngineConfig } from '../config'
 import type { GameEngineHost } from '../host'
-import { ANIM } from '../model/animConsts'
+import { ANIM, type AnimConfig } from '../model/animConsts'
 import { prepareTasks } from '../model/prepareTasks'
 import { ProcessData } from '../model/ProcessData'
 import type {
@@ -46,13 +46,22 @@ export class GameViewModel {
 
   private processData: ProcessData
 
+  private readonly anim: AnimConfig
+  private readonly onRowAdded?: (row: PathSegment[]) => void
+
   constructor(
     private readonly config: EngineConfig,
     private readonly stepComplete$: Observable<void>,
     private readonly overlayFadeOutComplete$: Observable<void>,
-    private readonly host?: GameEngineHost,
-    private readonly onRowAdded?: (row: PathSegment[]) => void
+    host?: GameEngineHost,
+    onRowAdded?: (row: PathSegment[]) => void,
+    animOverrides?: Partial<AnimConfig>
   ) {
+    this.anim = {
+      removeFadeMs: animOverrides?.removeFadeMs ?? ANIM.REMOVE_FADE,
+      itemDropMs: animOverrides?.itemDropMs ?? ANIM.ITEM_DROP
+    }
+    this.onRowAdded = onRowAdded
     this.keys = config.keys
     this.items$ = new BehaviorSubject<Partial<Record<string, PathSegmentExt>>>(
       this.keys.reduce((acc, item) => ({ ...acc, [item]: undefined }), {})
@@ -81,8 +90,8 @@ export class GameViewModel {
 
   private getStepCompleteTimeout(step: string): number {
     return step === 'remove'
-      ? ANIM.REMOVE_FADE + 50
-      : ANIM.ITEM_DROP + 50
+      ? this.anim.removeFadeMs + 50
+      : this.anim.itemDropMs + 50
   }
 
   setBusy = (busy: boolean): void => {

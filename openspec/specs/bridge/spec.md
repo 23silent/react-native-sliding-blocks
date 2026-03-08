@@ -43,3 +43,13 @@ The bridge SHALL drive step completion via Reanimated animation `finished` callb
 - **THEN** the bridge tracks pending animations
 - **AND** when the last `withTiming`/`withSequence` `finished` callback fires, `signalStepComplete()` is called
 - **AND** the task pipeline advances
+
+### Requirement: Configurable animation durations and opacities
+
+The bridge SHALL use animation durations and opacity values from settings (`animations`, `feedback`) passed from the host, not hardcoded constants. These include snap, drop, remove fade, game-over overlay, pause overlay, loading bar durations, and block/ghost/indicator opacities.
+
+#### Scenario: Settings-driven animations
+
+- **WHEN** the bridge runs animations (snap, drop, will-remove pulse, remove fade, overlay fade)
+- **THEN** it uses `settings.animations` for durations (completeSnapMs, itemDropMs, willRemovePulseMs, removeFadeMs, gameOverInMs, gameOverOutMs, pauseOverlayMs, loadingBarFillMs)
+- **AND** it uses `settings.feedback` for opacities (blockIdle, willRemovePulseMin, ghostActive, indicatorActive)

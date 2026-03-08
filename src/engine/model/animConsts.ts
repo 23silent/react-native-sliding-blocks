@@ -1,4 +1,4 @@
-/** Animation durations (ms) used by the SDK for pipeline timeouts. */
+/** Animation durations (ms) - default values. Use settings.animations for overrides. */
 export const ANIM = {
   COMPLETE_SNAP: 50,
   ITEM_DROP: 200,
@@ -7,3 +7,9 @@ export const ANIM = {
   GAME_OVER_IN: 250,
   GAME_OVER_OUT: 200
 } as const
+
+/** Animation config used by engine for step-complete timeouts. */
+export type AnimConfig = {
+  removeFadeMs: number
+  itemDropMs: number
+}

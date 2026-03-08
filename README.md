@@ -89,7 +89,7 @@ All-in-one component. Pass config, callbacks, and optional assets/theme.
 | `callbacks` | `SlidingBlocksCallbacks` | Score, game over, pause, restart, sound hooks, etc. |
 | `assets` | `SlidingBlocksAssets` | Block PNGs, background image. Omit for Skia fallbacks |
 | `theme` | `Partial<SlidingBlocksTheme>` | Overlay, score bar, block colors |
-| `settings` | `SlidingBlocksSettingsOverrides` | Block radius, explosion, checkerboard. Use `explosionPresets.performanceMode: 'low'` for smoother explosions on low-end Android. |
+| `settings` | `SlidingBlocksSettingsOverrides` | Block, explosion, checkerboard, explosionPresets, **animations** (durations in ms), **feedback** (opacity values). Use `explosionPresets.performanceMode: 'low'` for smoother explosions on low-end Android. |
 | `engine` | `IGameEngine` | Optional pre-created engine |
 | `blockRenderMode` | `'skia' \| 'image'` | `'skia'` = draw blocks (default), `'image'` = PNG assets |
 | `showFinishOption` | `boolean` | Show "Finish" in pause overlay; use with `onFinish` |
@@ -146,8 +146,9 @@ For fully custom layouts, use `useComposableSlidingBlocksContext()` inside `Root
 ### Low-level API
 
 - **`GameRootView`** — Minimal wrapper when you need full control over layout and bridge.
-- **`createGameEngine(config, host?, options?)`** — Create a React-agnostic engine for headless testing or custom integration. `options` can include `onRowAdded`.
-- **`PreloaderOverlay`**, **`scheduleIdle`**, **`cancelIdle`**, **`GESTURE_SENSITIVITY`**, **layout constants** (TOP_PAUSE, SCORE_BAR, etc.) — Exported for advanced use.
+- **`createGameEngine(config, host?, options?)`** — Create a React-agnostic engine for headless testing or custom integration. `options` can include `onRowAdded` and `animOverrides` (`removeFadeMs`, `itemDropMs`) for step-complete timeouts.
+- **`PreloaderOverlay`** — Loading overlay; optional `fillAnimationDurationMs` prop. Use `settings.animations.loadingBarFillMs` for consistency.
+- **`scheduleIdle`**, **`cancelIdle`**, **`GESTURE_SENSITIVITY`**, **layout constants** (TOP_PAUSE, SCORE_BAR, etc.) — Exported for advanced use.
 
 ---
 
@@ -187,6 +188,19 @@ type SlidingBlocksConfig = {
 | `backgroundImage` | Full-screen background image source |
 
 Omit for fallbacks: solid background, Skia-drawn blocks.
+
+### SlidingBlocksSettingsOverrides
+
+Partial overrides merged with defaults. All optional.
+
+| Category | Fields | Description |
+|----------|--------|-------------|
+| `block` | `radius`, `borderWidth`, `borderColor`, `frostHighlightColor`, `frostHighlightHeightRatio`, `superGradientColors`, `superGradientSteps` | Block appearance |
+| `explosion` | `radius`, `baseParticleSize`, `riseHeight`, `fallDistance`, `pictureSize` | Explosion particles |
+| `checkerboard` | `defaultBaseColor`, `defaultDarkOpacity`, `defaultLightOpacity` | Grid styling |
+| `explosionPresets` | `particleCount`, `trajectoryPresetCount`, `shapePresetCount`, `performanceMode` | Explosion variety; `performanceMode: 'low'` for low-end devices |
+| **`animations`** | `completeSnapMs`, `itemDropMs`, `willRemovePulseMs`, `removeFadeMs`, `gameOverInMs`, `gameOverOutMs`, `pauseOverlayMs`, `loadingBarFillMs` | Animation durations (ms) |
+| **`feedback`** | `blockIdle`, `willRemovePulseMin`, `ghostActive`, `indicatorActive` | Opacity values (0–1) for blocks, ghost, indicator |
 
 ---
 

@@ -18,7 +18,8 @@ import type { PathSegment } from '../../engine'
 import type { IGameEngine } from '../../engine'
 import { createGameEngine } from '../../engine'
 import type { GameLayout } from '../../types/layout'
-import type { GameLayoutSettings } from '../../types/settings'
+import type { AppSettings, GameLayoutSettings } from '../../types/settings'
+import { mergeSettings } from '../defaults'
 import type {
   SlidingBlocksAssets,
   SlidingBlocksCallbacks
@@ -39,6 +40,8 @@ export type UseGameRootOptions = {
   callbacks?: SlidingBlocksCallbacks
   showFinishOption?: boolean
   onMenuPress?: () => void
+  /** Merged settings (animations, feedback). Uses defaults when omitted. */
+  settings?: AppSettings
 }
 
 export type UseGameRootReturn = {
@@ -68,9 +71,14 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
     assets,
     callbacks = {},
     showFinishOption = false,
-    onMenuPress
+    onMenuPress,
+    settings: settingsProp
   } = options
 
+  const settings = useMemo(
+    () => settingsProp ?? mergeSettings(),
+    [settingsProp]
+  )
   const { width: screenWidth, height: screenHeight } = useWindowDimensions()
   const isPausedRef = useRef(false)
   // Safe area is host responsibility — wrap in SafeAreaView if needed
@@ -87,7 +95,11 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
   const [engine] = useState(() =>
     engineProp ??
     createGameEngine(toEngineConfig(config), undefined, {
-      onRowAdded: (row) => callbacksRef.current.onRowAdded?.(row)
+      onRowAdded: (row) => callbacksRef.current.onRowAdded?.(row),
+      animOverrides: {
+        removeFadeMs: settings.animations.removeFadeMs,
+        itemDropMs: settings.animations.itemDropMs
+      }
     })
   )
 
@@ -135,6 +147,8 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
   useEngineBridge(engine, shared, {
     orchestrator,
     config,
+    animations: settings.animations,
+    feedback: settings.feedback,
     onScoreChange: (score) => callbacksRef.current.onScoreChange?.(score),
     onGameOver: (score) => callbacksRef.current.onGameOver?.(score),
     onRemovingStart: (p) => callbacksRef.current.onRemovingStart?.(p),
@@ -143,11 +157,15 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
     onFitComplete: (p) => callbacksRef.current.onFitComplete?.(p)
   })
 
+  const pauseOverlayDuration = settings.animations.pauseOverlayMs
+
   const hidePauseOverlay = useCallback(() => {
     isPausedRef.current = false
-    shared.overlay.pauseOpacity.value = withTiming(0, { duration: 200 })
+    shared.overlay.pauseOpacity.value = withTiming(0, {
+      duration: pauseOverlayDuration
+    })
     callbacksRef.current.onResume?.()
-  }, [shared.overlay.pauseOpacity])
+  }, [shared.overlay.pauseOpacity, pauseOverlayDuration])
 
   const handleTapOrRestart = useCallback(
     (x: number, y: number): boolean => {
@@ -181,7 +199,9 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
 
       if (hitTestTopPause(x, y, layout)) {
         isPausedRef.current = true
-        shared.overlay.pauseOpacity.value = withTiming(1, { duration: 200 })
+        shared.overlay.pauseOpacity.value = withTiming(1, {
+          duration: pauseOverlayDuration
+        })
         callbacksRef.current.onPause?.()
         return true
       }
@@ -218,19 +238,23 @@ export function useGameRoot(options: UseGameRootOptions): UseGameRootReturn {
     () => ({
       pause: () => {
         isPausedRef.current = true
-        shared.overlay.pauseOpacity.value = withTiming(1, { duration: 200 })
+        shared.overlay.pauseOpacity.value = withTiming(1, {
+          duration: pauseOverlayDuration
+        })
         callbacksRef.current.onPause?.()
       },
       resume: hidePauseOverlay,
       restart: () => {
         engine.restart()
         isPausedRef.current = false
-        shared.overlay.pauseOpacity.value = withTiming(0, { duration: 200 })
+        shared.overlay.pauseOpacity.value = withTiming(0, {
+          duration: pauseOverlayDuration
+        })
         callbacksRef.current.onRestart?.()
       },
       isPaused: () => isPausedRef.current
     }),
-    [engine, hidePauseOverlay, shared.overlay.pauseOpacity]
+    [engine, hidePauseOverlay, shared.overlay.pauseOpacity, pauseOverlayDuration]
   )
 
   return {

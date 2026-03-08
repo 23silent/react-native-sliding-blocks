@@ -54,3 +54,7 @@ The engine SHALL NOT invoke sound, analytics, or other host-side effects. All si
 - **WHEN** the engine processes a row clear or snap
 - **THEN** the engine updates streams only
 - **AND** the bridge (not the engine) invokes host callbacks such as `onRemovingStart` or `onFitComplete`
+
+### Requirement: Configurable step-complete timeouts
+
+The engine SHALL accept optional `animOverrides` in `createGameEngine` options (`removeFadeMs`, `itemDropMs`). These override the default animation durations used for step-complete timeout fallbacks so they match the bridge's animation durations.

@@ -86,7 +86,9 @@ export function GameScreen({ onMenuPress }: Props): React.JSX.Element {
             block: settings.block,
             explosion: settings.explosion,
             checkerboard: settings.checkerboard,
-            explosionPresets: settings.explosionPresets
+            explosionPresets: settings.explosionPresets,
+            animations: settings.animations,
+            feedback: settings.feedback
           }}
           blockRenderMode="skia"
           showFinishOption
@@ -99,6 +101,7 @@ export function GameScreen({ onMenuPress }: Props): React.JSX.Element {
           <PreloaderOverlay
             progress={progress}
             theme={SLIDING_BLOCKS_THEME.loading}
+            fillAnimationDurationMs={settings.animations.loadingBarFillMs}
           />
         </View>
       )}

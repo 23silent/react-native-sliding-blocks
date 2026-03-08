@@ -36,6 +36,7 @@ export const GameRootView = memo(function GameRootView({
   onLoadComplete
 }: GameRootViewProps): React.JSX.Element {
   const showFinishOption = !!onMenuPress
+  const settings = useMemo(() => mergeSettings(), [])
 
   const gameRoot = useGameRoot({
     layoutConfig,
@@ -43,10 +44,9 @@ export const GameRootView = memo(function GameRootView({
     assets,
     callbacks,
     showFinishOption,
-    onMenuPress
+    onMenuPress,
+    settings
   })
-
-  const settings = useMemo(() => mergeSettings(), [])
   const theme = useMemo(
     () => mergeTheme(DEFAULT_SLIDING_BLOCKS_THEME),
     []

@@ -47,10 +47,32 @@ export type GameLayoutSettings = {
   keysSize: number
 }
 
+/** Animation durations (ms) - configurable via settings. */
+export type AnimationSettings = {
+  completeSnapMs: number
+  itemDropMs: number
+  willRemovePulseMs: number
+  removeFadeMs: number
+  gameOverInMs: number
+  gameOverOutMs: number
+  pauseOverlayMs: number
+  loadingBarFillMs: number
+}
+
+/** Opacity values for visual feedback - configurable via settings. */
+export type FeedbackOpacitySettings = {
+  blockIdle: number
+  willRemovePulseMin: number
+  ghostActive: number
+  indicatorActive: number
+}
+
 export type AppSettings = {
   block: BlockSettings
   explosion: ExplosionSettings
   checkerboard: CheckerboardSettings
   explosionPresets: ExplosionPresetsSettings
   gameLayout: GameLayoutSettings
+  animations: AnimationSettings
+  feedback: FeedbackOpacitySettings
 }

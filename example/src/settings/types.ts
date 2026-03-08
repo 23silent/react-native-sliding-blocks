@@ -48,12 +48,34 @@ export type GameLayoutSettings = {
   keysSize: number
 }
 
+/** Animation durations (ms) */
+export type AnimationSettings = {
+  completeSnapMs: number
+  itemDropMs: number
+  willRemovePulseMs: number
+  removeFadeMs: number
+  gameOverInMs: number
+  gameOverOutMs: number
+  pauseOverlayMs: number
+  loadingBarFillMs: number
+}
+
+/** Opacity values for visual feedback */
+export type FeedbackOpacitySettings = {
+  blockIdle: number
+  willRemovePulseMin: number
+  ghostActive: number
+  indicatorActive: number
+}
+
 export type AppSettings = {
   block: BlockSettings
   explosion: ExplosionSettings
   checkerboard: CheckerboardSettings
   explosionPresets: ExplosionPresetsSettings
   gameLayout: GameLayoutSettings
+  animations: AnimationSettings
+  feedback: FeedbackOpacitySettings
 }
 
 /** Partial overrides for merging with defaults */
@@ -63,4 +85,6 @@ export type AppSettingsOverrides = {
   checkerboard?: Partial<CheckerboardSettings>
   explosionPresets?: Partial<ExplosionPresetsSettings>
   gameLayout?: Partial<GameLayoutSettings>
+  animations?: Partial<AnimationSettings>
+  feedback?: Partial<FeedbackOpacitySettings>
 }

@@ -46,3 +46,7 @@ The UI SHALL accept optional block images and background image from the host. Wh
 - **WHEN** `blockImages` is provided
 - **THEN** the UI uses the host's PNG assets for blocks
 - **AND** background image is used if provided
+
+### Requirement: Configurable settings (animations, feedback)
+
+The UI SHALL accept `settings` that include `animations` (durations in ms) and `feedback` (opacity values). These are merged with defaults and passed through to the bridge and components. PreloaderOverlay SHALL accept optional `fillAnimationDurationMs` for consistency with `settings.animations.loadingBarFillMs`.

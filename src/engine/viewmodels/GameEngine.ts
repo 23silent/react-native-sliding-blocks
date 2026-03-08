@@ -58,7 +58,10 @@ export class GameEngine implements IGameEngine {
   constructor(
     config: EngineConfig,
     host?: GameEngineHost,
-    options?: { onRowAdded?: (row: PathSegment[]) => void }
+    options?: {
+      onRowAdded?: (row: PathSegment[]) => void
+      animOverrides?: { removeFadeMs?: number; itemDropMs?: number }
+    }
   ) {
     this.stepComplete$ = this.stepCompleteSubject$.asObservable()
     this.game = new GameViewModel(
@@ -66,7 +69,8 @@ export class GameEngine implements IGameEngine {
       this.stepComplete$,
       this.overlayFadeOutCompleteSubject$.asObservable(),
       host,
-      options?.onRowAdded
+      options?.onRowAdded,
+      options?.animOverrides
     )
     this.gesture = new GestureCoordinator(this.game, {
       cellSize: config.cellSize,

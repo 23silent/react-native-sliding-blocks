@@ -143,7 +143,9 @@ export function ComposableGameScreen({
       block: settings.block,
       explosion: settings.explosion,
       checkerboard: settings.checkerboard,
-      explosionPresets: settings.explosionPresets
+      explosionPresets: settings.explosionPresets,
+      animations: settings.animations,
+      feedback: settings.feedback
     },
     blockRenderMode: 'skia',
     showFinishOption: true,
@@ -191,6 +193,7 @@ export function ComposableGameScreen({
           <PreloaderOverlay
             progress={progress}
             theme={SLIDING_BLOCKS_THEME.loading}
+            fillAnimationDurationMs={settings.animations.loadingBarFillMs}
           />
         </View>
       )}

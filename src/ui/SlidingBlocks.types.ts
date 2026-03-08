@@ -1,11 +1,13 @@
 import type { GameConfig } from '../config'
 import type { IGameEngine, PathSegment } from '../engine'
 import type {
+  AnimationSettings,
   AppSettings,
   BlockSettings,
   CheckerboardSettings,
   ExplosionPresetsSettings,
   ExplosionSettings,
+  FeedbackOpacitySettings,
   GameLayoutSettings
 } from '../types/settings'
 
@@ -171,6 +173,8 @@ export type SlidingBlocksSettingsOverrides = {
   explosion?: Partial<ExplosionSettings>
   checkerboard?: Partial<CheckerboardSettings>
   explosionPresets?: Partial<ExplosionPresetsSettings>
+  animations?: Partial<AnimationSettings>
+  feedback?: Partial<FeedbackOpacitySettings>
 }
 
 export type SlidingBlocksProps = {

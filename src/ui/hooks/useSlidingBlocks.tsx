@@ -63,18 +63,18 @@ function SlidingBlocksDataProvider({
     onLoadComplete: _onLoadComplete
   } = hookProps
 
+  const settings = useMemo(
+    () => mergeSettings(settingsOverrides),
+    [settingsOverrides]
+  )
   const gameRoot = useGameRoot({
     layoutConfig,
     engine: engineProp,
     assets,
     callbacks,
-    showFinishOption
+    showFinishOption,
+    settings
   })
-
-  const settings = useMemo(
-    () => mergeSettings(settingsOverrides),
-    [settingsOverrides]
-  )
 
   const theme = useMemo(
     () => mergeTheme(DEFAULT_SLIDING_BLOCKS_THEME, themeOverrides),

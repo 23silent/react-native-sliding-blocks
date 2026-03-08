@@ -5,9 +5,10 @@ import { combineLatest } from 'rxjs'
 import { startWith } from 'rxjs/operators'
 
 import type { GameConfig } from '../config'
-import { ANIM, type IGameEngine,type PathSegmentExt, SegmentState } from '../engine'
+import { type IGameEngine, type PathSegmentExt, SegmentState } from '../engine'
 import { BinderHook } from '../engine/core/binding'
 import { nop } from '../engine/utils/nop'
+import type { AnimationSettings, FeedbackOpacitySettings } from '../types/settings'
 import type { GestureCompletionOrchestratorApi } from './GestureCompletionOrchestrator'
 import {
   applyRemovingAnimation,
@@ -22,6 +23,8 @@ export type RemovingPayload = { hasSuper: boolean }
 export type EngineBridgeOptions = {
   orchestrator: GestureCompletionOrchestratorApi
   config: GameConfig
+  animations: AnimationSettings
+  feedback: FeedbackOpacitySettings
   onScoreChange?: (score: number) => void
   onGameOver?: (score: number) => void
   onRemovingStart?: (payload: RemovingPayload) => void
@@ -38,6 +41,8 @@ export function useEngineBridge(
   const {
     orchestrator,
     config,
+    animations,
+    feedback,
     onScoreChange,
     onGameOver,
     onRemovingStart,
@@ -46,7 +51,7 @@ export function useEngineBridge(
     onFitComplete
   } = options
   const { cellSize, keys, explosionPoolSize } = config
-  const itemToStateValue = createItemToStateValue(config)
+  const itemToStateValue = createItemToStateValue(config, feedback)
   const nextPoolIndexRef = useRef(0)
   const batchIdRef = useRef(0)
   const removingPendingRef = useRef(0)
@@ -92,7 +97,7 @@ export function useEngineBridge(
             shared.translateX.value = withTiming(
               targetPx,
               {
-                duration: ANIM.COMPLETE_SNAP,
+                duration: animations.completeSnapMs,
                 easing: Easing.ease
               },
               finished => finished && scheduleOnRN(onSnapDone)
@@ -102,12 +107,14 @@ export function useEngineBridge(
         .bindAction(engine.activeItem$, item => {
           shared.indicator.width.value = item ? item.width : -1
           shared.indicator.left.value = item ? item.left : -1
-          shared.indicator.opacity.value = withTiming(item ? 0.1 : 0)
+          shared.indicator.opacity.value = withTiming(
+            item ? feedback.indicatorActive : 0
+          )
           if (item) {
             shared.ghost.color.value = item.color
             shared.ghost.translateX.value = item.left
             shared.ghost.translateY.value = item.top
-            shared.ghost.opacity.value = 0.4
+            shared.ghost.opacity.value = feedback.ghostActive
             shared.ghost.width.value = item.width
           } else {
             shared.ghost.color.value = 'transparent'
@@ -122,12 +129,12 @@ export function useEngineBridge(
             onGameOver?.(value.score)
             shared.overlay.gameOverScore.value = value.score
             shared.overlay.opacity.value = withTiming(1, {
-              duration: ANIM.GAME_OVER_IN
+              duration: animations.gameOverInMs
             })
           } else {
             shared.overlay.opacity.value = withTiming(
               0,
-              { duration: ANIM.GAME_OVER_OUT },
+              { duration: animations.gameOverOutMs },
               finished =>
                 finished && scheduleOnRN(orchestrator.onOverlayFadeOutComplete)
             )
@@ -170,7 +177,13 @@ export function useEngineBridge(
           const isActiveSlot =
             !!activeItem && !!item && activeItem.id === item.id
 
-          applySlotBaseUpdates(slot, st, isActiveSlot, batchContext)
+          applySlotBaseUpdates(
+            slot,
+            st,
+            isActiveSlot,
+            batchContext,
+            animations
+          )
 
           const wasWillRemove = prevItem?.state === SegmentState.WillRemove
           const isWillRemove = item?.state === SegmentState.WillRemove
@@ -179,7 +192,7 @@ export function useEngineBridge(
 
           if (!wasWillRemove && isWillRemove) {
             willRemoveHasSuper = willRemoveHasSuper || !!item?.super
-            applyWillRemovePulse(slot, batchContext)
+            applyWillRemovePulse(slot, batchContext, animations, feedback)
           } else if (!wasRemoving && isRemoving && item) {
             applyRemovingAnimation(
               key,
@@ -194,6 +207,7 @@ export function useEngineBridge(
               thisBatch,
               batchIdRef,
               engine,
+              animations,
               onRemovingEnd
             )
           } else if (!st.opacityControlledByAnimation) {
@@ -220,6 +234,6 @@ export function useEngineBridge(
       })
       disposeBag.add(itemsSub)
     },
-    [engine, config]
+    [engine, config, animations, feedback]
   )
 }

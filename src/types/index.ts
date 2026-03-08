@@ -5,9 +5,12 @@
 
 export type { GameLayout } from './layout'
 export type {
+  AnimationSettings,
   AppSettings,
   BlockSettings,
   CheckerboardSettings,
   ExplosionPresetsSettings,
   ExplosionSettings,
-  GameLayoutSettings} from './settings'
+  FeedbackOpacitySettings,
+  GameLayoutSettings
+} from './settings'
