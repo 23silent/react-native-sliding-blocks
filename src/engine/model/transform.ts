@@ -1,4 +1,4 @@
-import type { Board, ItemsMap, PathSegment } from './types'
+import type { Board, ItemsMap } from './types'
 import { SegmentState } from './types'
 
 export const rowsToItemsMap = (

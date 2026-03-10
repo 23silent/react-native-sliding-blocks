@@ -1,8 +1,8 @@
 import { filter, map, Observable, share, Subject, tap } from 'rxjs'
 
 import { mapToVoid } from '../core/binding'
-import type { Board } from '../model/types'
 import { translateSegmentOnBoard } from '../model/transform'
+import type { Board } from '../model/types'
 
 export interface IRootForGesture {
   getRows(): Board

@@ -153,7 +153,7 @@ export class ProcessData {
     const { columnsCount } = this.config
     const result = reduceProcessor(this.state, columnsCount)
     this.state = result.nextState
-    const { nextState, ...publicResult } = result
+    const { nextState: _nextState, ...publicResult } = result
     return publicResult
   }
 
